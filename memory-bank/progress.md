@@ -140,3 +140,12 @@
 - Implemented public checkout at `/checkout`.
 - Implemented order tracking at `/tracking`.
 - Added storefront browser smoke test on VPS.
+
+## 2026-05-27 Admin Layout And Production Hardening
+
+- Added shared admin shell and sidebar navigation.
+- Added responsive smoke across desktop/mobile for key pages.
+- Added `/api/health`.
+- Added `smoke:prod` script.
+- Added `backup:postgres` script.
+- Updated deployment documentation with reverse proxy, backup, smoke, and Docker cleanup guidance.

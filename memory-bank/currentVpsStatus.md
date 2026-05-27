@@ -257,3 +257,19 @@ Updated: 2026-05-27
   - Checkout.
   - Receive order code.
   - Track order by code.
+
+## 2026-05-27 Admin Layout And Production Hardening
+
+- Added shared admin shell with sidebar/top navigation at `/admin/layout.tsx`.
+- Login page is excluded from the admin shell automatically.
+- Added responsive smoke across desktop and mobile viewports for key public/admin pages.
+- Added `/api/health` endpoint with database check.
+- Added production smoke script: `npm run smoke:prod`.
+- Added Postgres backup script: `npm run backup:postgres`.
+- Added backup retention default of 14 days.
+- Updated `DEPLOYMENT.md` with deploy, health check, backup, Docker cleanup, and reverse proxy guidance.
+- Verified:
+  - Web build passed.
+  - Docker redeploy passed.
+  - Production smoke passed.
+  - Manual Postgres backup produced a `.sql.gz` file.

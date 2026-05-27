@@ -15,6 +15,8 @@
     "prisma:dev": "npm run prisma:dev --workspace apps/web",
     "prisma:seed": "npm run prisma:seed --workspace apps/web",
     "deploy:preview": "docker compose up -d --build",
-    "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f"
+    "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
+    "backup:postgres": "./scripts/backup-postgres.sh",
+    "smoke:prod": "./scripts/smoke-production.sh"
   }
 }
