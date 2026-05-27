@@ -17,7 +17,7 @@
     "deploy:preview": "docker compose up -d --build",
     "deploy:prod": "./scripts/deploy-production.sh",
     "check": "npm run lint && npm run build && npm run backup:verify && npm run smoke:regression",
-    "check:ci": "npm run lint && npm run build && npm run audit:high",
+    "check:ci": "npm run prisma:generate && npm run lint && npm run build && npm run audit:high",
     "audit:high": "npm audit --audit-level=high",
     "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
     "backup:postgres": "./scripts/backup-postgres.sh",
