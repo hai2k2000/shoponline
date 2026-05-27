@@ -56,6 +56,13 @@ enum ShipmentStatus {
   RETURNED
 }
 
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -119,6 +126,7 @@ model Product {
   inventory        Inventory?
   transactions     InventoryTransaction[]
   orderItems       OrderItem[]
+  purchaseItems    PurchaseOrderItem[]
 }
 
 model ProductImage {
@@ -162,6 +170,7 @@ model Supplier {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   debts     Debt[]
+  purchases PurchaseOrder[]
 }
 
 model Customer {
@@ -230,6 +239,36 @@ model Shipment {
   createdBy    User?          @relation(fields: [createdById], references: [id])
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  code       String              @unique
+  supplierId String?
+  supplier   Supplier?           @relation(fields: [supplierId], references: [id])
+  status     PurchaseOrderStatus @default(DRAFT)
+  subtotal   Decimal             @default(0)
+  shippingFee Decimal            @default(0)
+  total      Decimal             @default(0)
+  expectedAt DateTime?
+  receivedAt DateTime?
+  note       String?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  items      PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  productName     String
+  sku             String?
+  quantity        Int
+  costPrice       Decimal       @default(0)
+  total           Decimal       @default(0)
 }
 
 model OrderItem {

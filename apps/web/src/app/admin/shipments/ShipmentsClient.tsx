@@ -21,7 +21,7 @@ type ShipmentRow = {
 
 const statuses = ["PENDING", "PACKED", "SHIPPED", "DELIVERED", "FAILED", "RETURNED"];
 
-export function ShipmentsClient({ rows, orders }: { rows: ShipmentRow[]; orders: OrderOption[] }) {
+export function ShipmentsClient({ rows, orders, sessionToken }: { rows: ShipmentRow[]; orders: OrderOption[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -62,20 +62,21 @@ export function ShipmentsClient({ rows, orders }: { rows: ShipmentRow[]; orders:
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-sm">
               <thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Mã đơn</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3">Đơn vị giao</th><th className="px-4 py-3">Mã vận đơn</th><th className="px-4 py-3">Phí</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Ngày gửi</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
-              <tbody>{filtered.map((row) => <tr key={row.id} className="border-t border-slate-100"><td className="px-4 py-3"><strong>{row.orderCode}</strong><p className="text-xs text-slate-500">{row.note || ""}</p></td><td className="px-4 py-3">{row.customer}</td><td className="px-4 py-3">{row.carrier}<p className="text-xs text-slate-500">{row.service || ""}</p></td><td className="px-4 py-3">{row.trackingCode || "-"}</td><td className="px-4 py-3">{money(row.shippingFee)}</td><td className="px-4 py-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{viShipmentStatus(row.status)}</span></td><td className="px-4 py-3">{row.shippedAt ? dateText(row.shippedAt) : "-"}</td><td className="px-4 py-3"><StatusButtons row={row} /></td></tr>)}{!filtered.length ? <tr><td className="px-4 py-10 text-center text-slate-500" colSpan={8}>Chưa có vận đơn phù hợp.</td></tr> : null}</tbody>
+              <tbody>{filtered.map((row) => <tr key={row.id} className="border-t border-slate-100"><td className="px-4 py-3"><strong>{row.orderCode}</strong><p className="text-xs text-slate-500">{row.note || ""}</p></td><td className="px-4 py-3">{row.customer}</td><td className="px-4 py-3">{row.carrier}<p className="text-xs text-slate-500">{row.service || ""}</p></td><td className="px-4 py-3">{row.trackingCode || "-"}</td><td className="px-4 py-3">{money(row.shippingFee)}</td><td className="px-4 py-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{viShipmentStatus(row.status)}</span></td><td className="px-4 py-3">{row.shippedAt ? dateText(row.shippedAt) : "-"}</td><td className="px-4 py-3"><StatusButtons row={row} sessionToken={sessionToken} /></td></tr>)}{!filtered.length ? <tr><td className="px-4 py-10 text-center text-slate-500" colSpan={8}>Chưa có vận đơn phù hợp.</td></tr> : null}</tbody>
             </table>
           </div>
         </section>
       </div>
-      {modalOpen ? <ShipmentModal orders={orders} onClose={() => setModalOpen(false)} /> : null}
+      {modalOpen ? <ShipmentModal orders={orders} sessionToken={sessionToken} onClose={() => setModalOpen(false)} /> : null}
     </main>
   );
 }
 
-function ShipmentModal({ orders, onClose }: { orders: OrderOption[]; onClose: () => void }) {
+function ShipmentModal({ orders, sessionToken, onClose }: { orders: OrderOption[]; sessionToken: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
       <form action="/api/admin/shipments" method="post" className="grid w-full max-w-2xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
         <div className="flex items-center justify-between border-b border-slate-100 pb-3"><h2 className="text-xl font-semibold">Tạo vận đơn</h2><button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button></div>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Đơn hàng<select required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="orderId">{orders.map((item) => <option key={item.id} value={item.id}>{item.orderCode} - {item.customer} - {viOrderStatus(item.orderStatus)}</option>)}</select></label>
@@ -93,9 +94,9 @@ function ShipmentModal({ orders, onClose }: { orders: OrderOption[]; onClose: ()
   );
 }
 
-function StatusButtons({ row }: { row: ShipmentRow }) {
+function StatusButtons({ row, sessionToken }: { row: ShipmentRow; sessionToken: string }) {
   const next = row.status === "PENDING" ? ["PACKED", "SHIPPED"] : row.status === "PACKED" ? ["SHIPPED"] : row.status === "SHIPPED" ? ["DELIVERED", "FAILED", "RETURNED"] : [];
-  return <div className="flex flex-wrap justify-end gap-2">{next.map((item) => <form key={item} action="/api/admin/shipments/status" method="post"><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value={item} /><button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" type="submit">{viShipmentStatus(item)}</button></form>)}</div>;
+  return <div className="flex flex-wrap justify-end gap-2">{next.map((item) => <form key={item} action="/api/admin/shipments/status" method="post"><input type="hidden" name="sessionToken" value={sessionToken} /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value={item} /><button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" type="submit">{viShipmentStatus(item)}</button></form>)}</div>;
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) { return <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><span className="text-sm text-slate-500">{label}</span><strong className="mt-2 block text-2xl">{value}</strong></article>; }

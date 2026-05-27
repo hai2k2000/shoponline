@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { ShipmentsClient } from "./ShipmentsClient";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShipmentsPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [shipments, orders] = await Promise.all([
     prisma.shipment.findMany({
       orderBy: { updatedAt: "desc" },
@@ -43,6 +47,7 @@ export default async function ShipmentsPage() {
         orderStatus: row.orderStatus,
         total: Number(row.total),
       }))}
+      sessionToken={sessionToken}
     />
   );
 }

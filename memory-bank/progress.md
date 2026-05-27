@@ -198,3 +198,12 @@
 - Added route handler POST flows for shipment creation and status updates.
 - Synced `SHIPPED` shipments to order `SHIPPING` status.
 - Added and passed a VPS browser smoke for shipment creation.
+
+## 2026-05-27 Purchase Orders
+
+- Added `PurchaseOrder` and `PurchaseOrderItem` models with migration.
+- Added `/admin/purchases` list-first workflow.
+- Added purchase creation and receive/cancel POST flows.
+- Receiving a purchase order imports stock and logs inventory transactions.
+- Fixed route redirects behind Nginx proxy and added token fallback for admin POST routes.
+- Added and passed a VPS purchase smoke for create and receive.

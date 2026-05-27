@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, verifySessionToken } from "@/lib/auth";
 
 type ShipmentStatus = "PENDING" | "PACKED" | "SHIPPED" | "DELIVERED" | "FAILED" | "RETURNED";
 
@@ -9,13 +9,13 @@ function text(formData: FormData, key: string) {
 }
 
 function back(request: NextRequest) {
-  return NextResponse.redirect(new URL("/admin/shipments", request.url), { status: 303 });
+  return NextResponse.redirect(publicUrl(request, "/admin/shipments"), { status: 303 });
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.redirect(new URL("/admin/login?next=/admin/shipments", request.url), { status: 303 });
   const formData = await request.formData();
+  const user = await getCurrentUserFromForm(formData);
+  if (!user) return NextResponse.redirect(publicUrl(request, "/admin/login?next=/admin/shipments"), { status: 303 });
   const id = text(formData, "id");
   const status = text(formData, "status") as ShipmentStatus;
   if (!id || !["PENDING", "PACKED", "SHIPPED", "DELIVERED", "FAILED", "RETURNED"].includes(status)) return back(request);
@@ -38,4 +38,21 @@ export async function POST(request: NextRequest) {
   });
 
   return back(request);
+}
+
+function publicUrl(request: NextRequest, path: string) {
+  const proto = request.headers.get("x-forwarded-proto") || "https";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host;
+  return new URL(path, `${proto}://${host}`);
+}
+
+async function getCurrentUserFromForm(formData: FormData) {
+  const cookieUser = await getCurrentUser();
+  if (cookieUser) return cookieUser;
+  const session = verifySessionToken(text(formData, "sessionToken"));
+  if (!session) return null;
+  return prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, name: true, email: true, role: true, status: true },
+  });
 }

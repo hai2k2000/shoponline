@@ -377,3 +377,12 @@ Updated: 2026-05-27
 - Added POST route handlers for creating shipments and updating shipment status.
 - Marking a shipment as `SHIPPED` syncs the order to `SHIPPING`; inventory completion remains in the order workflow.
 - Build, Docker redeploy, production smoke, and browser shipment smoke passed.
+
+## 2026-05-27 Purchase Order Update
+
+- Added `PurchaseOrder`, `PurchaseOrderItem`, `PurchaseOrderStatus`, and migration.
+- Added `/admin/purchases` for supplier purchase orders and receiving goods into inventory.
+- Receiving a purchase order increases stock and writes `InventoryTransaction` records with type `IMPORT`.
+- Added admin POST route handlers for purchase creation and status updates.
+- Fixed admin POST route redirects to respect forwarded HTTPS host.
+- Build, Docker redeploy, production smoke, shipment smoke, and purchase smoke passed.
