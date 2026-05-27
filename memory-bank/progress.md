@@ -221,3 +221,11 @@
 - Added `/admin/customers/timeline` workflow for CSKH history.
 - Order creation for known customers now writes an `ORDER` timeline event.
 - Added and passed a VPS customer timeline smoke for manual note creation.
+
+## 2026-05-27 Returns And Refunds
+
+- Added `ReturnRequest` and `RefundTransaction` models with migration.
+- Added `/admin/returns` workflow.
+- Added return create and status transition POST routes.
+- Receiving a completed-order return restores inventory; refunding writes a refund transaction.
+- Added and passed a VPS return/refund smoke through approve, receive, and refund.

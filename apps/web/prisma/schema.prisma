@@ -78,6 +78,14 @@ enum CustomerTimelineType {
   SUPPORT
 }
 
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  RECEIVED
+  REFUNDED
+  REJECTED
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -105,6 +113,8 @@ model User {
   shipments    Shipment[]
   notifications Notification[]
   customerTimelines CustomerTimeline[]
+  createdReturns ReturnRequest[]
+  refunds RefundTransaction[]
 }
 
 model Category {
@@ -226,6 +236,8 @@ model Order {
   items         OrderItem[]
   payments      PaymentTransaction[]
   shipments     Shipment[]
+  returns       ReturnRequest[]
+  refunds       RefundTransaction[]
 }
 
 model PaymentTransaction {
@@ -257,6 +269,39 @@ model Shipment {
   createdBy    User?          @relation(fields: [createdById], references: [id])
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+model ReturnRequest {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  orderId     String
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      ReturnStatus @default(REQUESTED)
+  reason      String
+  refundAmount Decimal     @default(0)
+  receivedAt  DateTime?
+  refundedAt  DateTime?
+  note        String?
+  createdById String?
+  createdBy   User?        @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  refunds     RefundTransaction[]
+}
+
+model RefundTransaction {
+  id             String        @id @default(cuid())
+  returnRequestId String?
+  returnRequest   ReturnRequest? @relation(fields: [returnRequestId], references: [id], onDelete: SetNull)
+  orderId        String
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount         Decimal       @default(0)
+  method         String        @default("BANK_TRANSFER")
+  reference      String?
+  note           String?
+  refundedById   String?
+  refundedBy     User?         @relation(fields: [refundedById], references: [id])
+  createdAt      DateTime      @default(now())
 }
 
 model PurchaseOrder {

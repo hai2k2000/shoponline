@@ -13,6 +13,7 @@ const links = [
   ["Nhập hàng", "/admin/purchases"],
   ["Đơn hàng", "/admin/orders"],
   ["Vận chuyển", "/admin/shipments"],
+  ["Trả hàng", "/admin/returns"],
   ["Khách hàng", "/admin/customers"],
   ["CSKH", "/admin/customers/timeline"],
   ["Nhà cung cấp", "/admin/suppliers"],

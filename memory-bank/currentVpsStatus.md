@@ -402,3 +402,11 @@ Updated: 2026-05-27
 - Added admin POST route for creating customer timeline entries.
 - Creating an order for a known customer now writes an `ORDER` timeline event.
 - Build, Docker redeploy, production smoke, and customer timeline smoke passed.
+
+## 2026-05-27 Return and Refund Update
+
+- Added `ReturnRequest`, `RefundTransaction`, `ReturnStatus`, and migration.
+- Added `/admin/returns` for return requests, approval, receiving returned goods, and refunding.
+- Receiving a return restores inventory only for completed orders to avoid double-counting stock.
+- Refunding creates `RefundTransaction`, updates the order to `RETURNED`, and marks payment as `REFUNDED`.
+- Build, Docker redeploy, production smoke, and return/refund smoke passed.
