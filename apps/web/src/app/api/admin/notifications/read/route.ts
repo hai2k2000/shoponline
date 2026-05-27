@@ -1,30 +1,21 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { parseAdminForm, requiredText } from "@/lib/admin-form";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, verifySessionToken } from "@/lib/auth";
+import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
+import { markNotificationRead } from "@/server/services/admin-system-service";
 
-function back(request: NextRequest) {
-  const proto = request.headers.get("x-forwarded-proto") || "https";
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host;
-  return NextResponse.redirect(new URL("/admin/notifications", `${proto}://${host}`), { status: 303 });
-}
+const schema = z.object({ id: requiredText });
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const user = await getCurrentUserFromForm(formData);
-  if (!user) return back(request);
-  const id = String(formData.get("id") || "").trim();
-  if (id) await prisma.notification.updateMany({ where: { id, readAt: null }, data: { readAt: new Date() } });
-  return back(request);
-}
-
-async function getCurrentUserFromForm(formData: FormData) {
-  const cookieUser = await getCurrentUser();
-  if (cookieUser) return cookieUser;
-  const token = String(formData.get("sessionToken") || "").trim();
-  const session = verifySessionToken(token);
-  if (!session) return null;
-  return prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true, status: true },
-  });
+  try {
+    const formData = await request.formData();
+    const { user } = await requireAdminFormUser(request, formData, "notifications:write", "/admin/notifications");
+    if (!user) return redirectTo(request, "/admin/notifications");
+    const input = parseAdminForm(schema, formData);
+    await prisma.$transaction((tx) => markNotificationRead(tx, input.id));
+    return redirectTo(request, "/admin/notifications");
+  } catch (error) {
+    return redirectWithAdminError(request, "/admin/notifications", error);
+  }
 }

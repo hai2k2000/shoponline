@@ -1,56 +1,37 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { optionalText, parseAdminForm, requiredText } from "@/lib/admin-form";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, verifySessionToken } from "@/lib/auth";
+import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
+import { createCustomer, updateCustomer } from "@/server/services/customer-service";
 
-type RecordStatus = "ACTIVE" | "DRAFT" | "HIDDEN" | "ARCHIVED";
-
-function text(formData: FormData, key: string) { return String(formData.get(key) || "").trim(); }
-function status(formData: FormData): RecordStatus {
-  const value = text(formData, "status");
-  return ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"].includes(value) ? (value as RecordStatus) : "ACTIVE";
-}
-function publicUrl(request: NextRequest, path: string) { const proto = request.headers.get("x-forwarded-proto") || "https"; const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host; return new URL(path, `${proto}://${host}`); }
+const customerFormSchema = z.object({
+  mode: z.enum(["create", "update"]),
+  id: optionalText,
+  name: requiredText,
+  phone: optionalText,
+  email: optionalText,
+  address: optionalText,
+  source: optionalText,
+  group: optionalText,
+  notes: optionalText,
+  status: z.enum(["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"]).default("ACTIVE"),
+});
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const user = await getCurrentUserFromForm(formData);
-  if (!user) return NextResponse.redirect(publicUrl(request, "/admin/login?next=/admin/customers"), { status: 303 });
-  const mode = text(formData, "mode");
-  const name = text(formData, "name");
-  if (!name || !["create", "update"].includes(mode)) return NextResponse.redirect(publicUrl(request, "/admin/customers"), { status: 303 });
-
-  if (mode === "create") {
-    const customer = await prisma.customer.create({ data: customerData(formData, name) });
-    await prisma.activityLog.create({ data: { userId: user.id, action: "CREATE", entityType: "Customer", entityId: customer.id, description: `Tạo khách hàng ${customer.name}` } });
+  try {
+    const formData = await request.formData();
+    const { user, response } = await requireAdminFormUser(request, formData, "customers:write", "/admin/customers");
+    if (!user) return response;
+    const input = parseAdminForm(customerFormSchema, formData);
+    const data = { name: input.name, phone: input.phone, email: input.email, address: input.address, source: input.source, group: input.group, notes: input.notes, status: input.status };
+    await prisma.$transaction(async (tx) => {
+      if (input.mode === "create") await createCustomer(tx, data, user.id);
+      if (input.mode === "update" && input.id) await updateCustomer(tx, input.id, data, user.id);
+    });
+  
+    return redirectTo(request, "/admin/customers");
+  } catch (error) {
+    return redirectWithAdminError(request, "/admin/customers", error);
   }
-
-  if (mode === "update") {
-    const id = text(formData, "id");
-    if (!id) return NextResponse.redirect(publicUrl(request, "/admin/customers"), { status: 303 });
-    const customer = await prisma.customer.update({ where: { id }, data: customerData(formData, name) });
-    await prisma.activityLog.create({ data: { userId: user.id, action: "UPDATE", entityType: "Customer", entityId: customer.id, description: `Cập nhật khách hàng ${customer.name}` } });
-  }
-
-  return NextResponse.redirect(publicUrl(request, "/admin/customers"), { status: 303 });
-}
-
-function customerData(formData: FormData, name: string) {
-  return {
-    name,
-    phone: text(formData, "phone") || null,
-    email: text(formData, "email") || null,
-    address: text(formData, "address") || null,
-    source: text(formData, "source") || null,
-    group: text(formData, "group") || null,
-    notes: text(formData, "notes") || null,
-    status: status(formData),
-  };
-}
-
-async function getCurrentUserFromForm(formData: FormData) {
-  const cookieUser = await getCurrentUser();
-  if (cookieUser) return cookieUser;
-  const session = verifySessionToken(text(formData, "sessionToken"));
-  if (!session) return null;
-  return prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, role: true, status: true } });
 }

@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { SESSION_COOKIE } from "@/lib/session";
 import { SettingsClient } from "./SettingsClient";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +11,11 @@ export default async function SettingsPage() {
     create: { id: "default", storeName: "ShopOnline" },
     update: {},
   });
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   return (
     <SettingsClient
+      sessionToken={sessionToken}
       setting={{
         storeName: setting.storeName,
         logo: setting.logo,

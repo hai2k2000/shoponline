@@ -1,25 +1,21 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { parseAdminForm, requiredText } from "@/lib/admin-form";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, verifySessionToken } from "@/lib/auth";
+import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
+import { archiveExpense } from "@/server/services/expense-service";
 
-function text(formData: FormData, key: string) { return String(formData.get(key) || "").trim(); }
-function publicUrl(request: NextRequest, path: string) { const proto = request.headers.get("x-forwarded-proto") || "https"; const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host; return new URL(path, `${proto}://${host}`); }
+const archiveSchema = z.object({ id: requiredText });
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const user = await getCurrentUserFromForm(formData);
-  if (!user) return NextResponse.redirect(publicUrl(request, "/admin/login?next=/admin/finance/expenses"), { status: 303 });
-  const id = text(formData, "id");
-  if (!id) return NextResponse.redirect(publicUrl(request, "/admin/finance/expenses"), { status: 303 });
-  const expense = await prisma.expense.update({ where: { id }, data: { status: "ARCHIVED" } });
-  await prisma.activityLog.create({ data: { userId: user.id, action: "ARCHIVE", entityType: "Expense", entityId: expense.id, description: `Lưu trữ chi phí ${expense.title}` } });
-  return NextResponse.redirect(publicUrl(request, "/admin/finance/expenses"), { status: 303 });
-}
-
-async function getCurrentUserFromForm(formData: FormData) {
-  const cookieUser = await getCurrentUser();
-  if (cookieUser) return cookieUser;
-  const session = verifySessionToken(text(formData, "sessionToken"));
-  if (!session) return null;
-  return prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, role: true, status: true } });
+  try {
+    const formData = await request.formData();
+    const { user, response } = await requireAdminFormUser(request, formData, "finance:write", "/admin/finance/expenses");
+    if (!user) return response;
+    const input = parseAdminForm(archiveSchema, formData);
+    await prisma.$transaction((tx) => archiveExpense(tx, input.id, user.id));
+    return redirectTo(request, "/admin/finance/expenses");
+  } catch (error) {
+    return redirectWithAdminError(request, "/admin/finance/expenses", error);
+  }
 }

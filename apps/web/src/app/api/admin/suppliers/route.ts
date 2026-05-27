@@ -1,55 +1,36 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { optionalText, parseAdminForm, requiredText } from "@/lib/admin-form";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, verifySessionToken } from "@/lib/auth";
+import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
+import { createSupplier, updateSupplier } from "@/server/services/supplier-service";
 
-type RecordStatus = "ACTIVE" | "DRAFT" | "HIDDEN" | "ARCHIVED";
-
-function text(formData: FormData, key: string) { return String(formData.get(key) || "").trim(); }
-function status(formData: FormData): RecordStatus {
-  const value = text(formData, "status");
-  return ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"].includes(value) ? (value as RecordStatus) : "ACTIVE";
-}
-function publicUrl(request: NextRequest, path: string) { const proto = request.headers.get("x-forwarded-proto") || "https"; const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host; return new URL(path, `${proto}://${host}`); }
+const supplierFormSchema = z.object({
+  mode: z.enum(["create", "update"]),
+  id: optionalText,
+  name: requiredText,
+  phone: optionalText,
+  email: optionalText,
+  address: optionalText,
+  taxCode: optionalText,
+  note: optionalText,
+  status: z.enum(["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"]).default("ACTIVE"),
+});
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const user = await getCurrentUserFromForm(formData);
-  if (!user) return NextResponse.redirect(publicUrl(request, "/admin/login?next=/admin/suppliers"), { status: 303 });
-  const mode = text(formData, "mode");
-  const name = text(formData, "name");
-  if (!name || !["create", "update"].includes(mode)) return NextResponse.redirect(publicUrl(request, "/admin/suppliers"), { status: 303 });
-
-  if (mode === "create") {
-    const supplier = await prisma.supplier.create({ data: supplierData(formData, name) });
-    await prisma.activityLog.create({ data: { userId: user.id, action: "CREATE", entityType: "Supplier", entityId: supplier.id, description: `Tạo nhà cung cấp ${supplier.name}` } });
+  try {
+    const formData = await request.formData();
+    const { user, response } = await requireAdminFormUser(request, formData, "suppliers:write", "/admin/suppliers");
+    if (!user) return response;
+    const input = parseAdminForm(supplierFormSchema, formData);
+    const data = { name: input.name, phone: input.phone, email: input.email, address: input.address, taxCode: input.taxCode, note: input.note, status: input.status };
+    await prisma.$transaction(async (tx) => {
+      if (input.mode === "create") await createSupplier(tx, data, user.id);
+      if (input.mode === "update" && input.id) await updateSupplier(tx, input.id, data, user.id);
+    });
+  
+    return redirectTo(request, "/admin/suppliers");
+  } catch (error) {
+    return redirectWithAdminError(request, "/admin/suppliers", error);
   }
-
-  if (mode === "update") {
-    const id = text(formData, "id");
-    if (!id) return NextResponse.redirect(publicUrl(request, "/admin/suppliers"), { status: 303 });
-    const supplier = await prisma.supplier.update({ where: { id }, data: supplierData(formData, name) });
-    await prisma.activityLog.create({ data: { userId: user.id, action: "UPDATE", entityType: "Supplier", entityId: supplier.id, description: `Cập nhật nhà cung cấp ${supplier.name}` } });
-  }
-
-  return NextResponse.redirect(publicUrl(request, "/admin/suppliers"), { status: 303 });
-}
-
-function supplierData(formData: FormData, name: string) {
-  return {
-    name,
-    phone: text(formData, "phone") || null,
-    email: text(formData, "email") || null,
-    address: text(formData, "address") || null,
-    taxCode: text(formData, "taxCode") || null,
-    note: text(formData, "note") || null,
-    status: status(formData),
-  };
-}
-
-async function getCurrentUserFromForm(formData: FormData) {
-  const cookieUser = await getCurrentUser();
-  if (cookieUser) return cookieUser;
-  const session = verifySessionToken(text(formData, "sessionToken"));
-  if (!session) return null;
-  return prisma.user.findUnique({ where: { id: session.userId }, select: { id: true, name: true, email: true, role: true, status: true } });
 }
