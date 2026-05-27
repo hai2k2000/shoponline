@@ -1,14 +1,9 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { CustomersClient } from "./CustomersClient";
 
-export default function Page() {
-  return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? kh?ch h?ng</h1>
-        <p className="text-slate-600">H? s? kh?ch h?ng, l?ch s? mua h?ng, ghi ch? v? ph?n nh?m.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function CustomersPage() {
+  const rows = await prisma.customer.findMany({ orderBy: [{ updatedAt: "desc" }] });
+  return <CustomersClient rows={rows.map((row) => ({ id: row.id, name: row.name, phone: row.phone, email: row.email, address: row.address, source: row.source, group: row.group, notes: row.notes, status: row.status, totalOrders: row.totalOrders, totalSpent: Number(row.totalSpent) }))} />;
 }

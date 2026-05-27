@@ -151,7 +151,7 @@ model Supplier {
 }
 
 model Customer {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
   phone       String?
   email       String?
@@ -159,8 +159,11 @@ model Customer {
   source      String?
   group       String?
   notes       String?
-  totalOrders Int      @default(0)
-  totalSpent  Decimal  @default(0)
+  status      RecordStatus @default(ACTIVE)
+  totalOrders Int          @default(0)
+  totalSpent  Decimal      @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   orders      Order[]
   debts       Debt[]
 }

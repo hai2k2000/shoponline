@@ -97,3 +97,20 @@ Updated: 2026-05-27
   - Export stock.
   - Adjust stock.
   - Verify transaction notes.
+
+## 2026-05-27 Customers CRUD Update
+
+- Replaced `/admin/customers` placeholder with a real Prisma-backed customer module.
+- Added `Customer.status`, `Customer.createdAt`, and `Customer.updatedAt` migrations.
+- Added list-first customer management with search, source/group/status filters, detail modal, create/edit modal, and archive action.
+- Customer mutations write `ActivityLog`.
+- Mutation UI now reloads after save/archive so the table reflects database state immediately.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create customer.
+  - Search customer by phone.
+  - View detail.
+  - Edit customer.
+  - Archive customer.
+  - Verify archived status in the table.

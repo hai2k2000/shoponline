@@ -69,3 +69,11 @@
 - Added server actions for import, export, and adjust.
 - Added transaction ledger display.
 - Added inventory browser smoke test on VPS.
+
+## 2026-05-27 Customers CRUD
+
+- Implemented real `/admin/customers` module.
+- Added customer status and timestamp migrations.
+- Added server actions for create, update, and archive.
+- Added list-first UI with filters, detail modal, and create/edit modal.
+- Added customer CRUD browser smoke test on VPS.
