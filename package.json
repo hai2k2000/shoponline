@@ -34,6 +34,7 @@
     "smoke:checkout": "tsx scripts/smoke-checkout.ts",
     "smoke:reporting": "tsx scripts/smoke-reporting.ts",
     "smoke:tracking": "tsx scripts/smoke-tracking.ts",
-    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking"
+    "smoke:uat-pages": "tsx scripts/smoke-uat-pages.ts",
+    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking && npm run smoke:uat-pages"
   }
 }
