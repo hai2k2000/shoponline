@@ -85,3 +85,12 @@
 - Added server actions for create, update, and archive.
 - Added list-first UI with status filter, detail modal, and create/edit modal.
 - Added supplier CRUD browser smoke test on VPS.
+
+## 2026-05-27 Orders Workflow
+
+- Implemented real `/admin/orders` module.
+- Added server actions for create order and update order status.
+- Added stock reservation on order creation.
+- Added stock export on completed orders and stock release on cancelled orders.
+- Added return workflow for completed orders.
+- Added order browser smoke test on VPS.

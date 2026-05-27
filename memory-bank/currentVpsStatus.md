@@ -131,3 +131,23 @@ Updated: 2026-05-27
   - Edit supplier.
   - Archive supplier.
   - Verify archived status in the table.
+
+## 2026-05-27 Orders Workflow Update
+
+- Replaced `/admin/orders` placeholder with a real Prisma-backed order workflow.
+- Added list-first order management with search, status filter, detail modal, and create order modal.
+- Create order validates available stock and increases `Inventory.reservedQuantity`.
+- Order status updates support confirm, complete, cancel, and return.
+- Completing an order exports stock, writes `InventoryTransaction`, marks payment paid, and updates customer totals.
+- Cancelling an order releases reserved stock.
+- Returning a completed order restores stock and writes a return transaction.
+- Order mutations write `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create order.
+  - Search order by note.
+  - View order detail.
+  - Confirm order.
+  - Complete order.
+  - Verify completed status in the table.

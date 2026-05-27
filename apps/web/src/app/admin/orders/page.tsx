@@ -1,14 +1,56 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { OrdersClient } from "./OrdersClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function OrdersPage() {
+  const [orders, customers, products] = await Promise.all([
+    prisma.order.findMany({
+      orderBy: [{ updatedAt: "desc" }],
+      include: {
+        customer: { select: { name: true } },
+        items: { select: { productName: true, sku: true, quantity: true, salePrice: true, total: true } },
+      },
+    }),
+    prisma.customer.findMany({
+      where: { status: { not: "ARCHIVED" } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, phone: true },
+    }),
+    prisma.product.findMany({
+      where: { status: { not: "ARCHIVED" } },
+      orderBy: { name: "asc" },
+      include: { inventory: true },
+    }),
+  ]);
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? ??n h?ng</h1>
-        <p className="text-slate-600">Workflow: NEW, CONFIRMED, PACKING, SHIPPING, COMPLETED.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <OrdersClient
+      rows={orders.map((row) => ({
+        id: row.id,
+        orderCode: row.orderCode,
+        customerName: row.customer?.name || "Khách lẻ",
+        total: Number(row.total),
+        paymentStatus: row.paymentStatus,
+        orderStatus: row.orderStatus,
+        note: row.note,
+        createdAt: row.createdAt.toISOString(),
+        items: row.items.map((item) => ({
+          productName: item.productName,
+          sku: item.sku,
+          quantity: item.quantity,
+          salePrice: Number(item.salePrice),
+          total: Number(item.total),
+        })),
+      }))}
+      customers={customers}
+      products={products.map((row) => ({
+        id: row.id,
+        name: row.name,
+        sku: row.sku,
+        salePrice: Number(row.salePrice),
+        available: (row.inventory?.quantity || 0) - (row.inventory?.reservedQuantity || 0),
+      })).filter((row) => row.available > 0)}
+    />
   );
 }
