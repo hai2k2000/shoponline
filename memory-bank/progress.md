@@ -214,3 +214,10 @@
 - Added `/admin/notifications` list and read/read-all workflows.
 - Purchase receiving now writes a success notification.
 - Added and passed a VPS notification smoke for marking a notification as read.
+
+## 2026-05-27 Customer Timeline
+
+- Added `CustomerTimeline` model and `CustomerTimelineType` enum with migration.
+- Added `/admin/customers/timeline` workflow for CSKH history.
+- Order creation for known customers now writes an `ORDER` timeline event.
+- Added and passed a VPS customer timeline smoke for manual note creation.

@@ -78,6 +78,17 @@ export async function createOrderAction(formData: FormData) {
       data: { reservedQuantity: inventory.reservedQuantity + quantity },
     });
     await tx.activityLog.create({ data: { userId: user.id, action: "CREATE_ORDER", entityType: "Order", entityId: order.id, description: `Tạo đơn hàng ${order.orderCode}` } });
+    if (customerId) {
+      await tx.customerTimeline.create({
+        data: {
+          customerId,
+          type: "ORDER",
+          title: `Tạo đơn hàng ${order.orderCode}`,
+          note: note || `Giá trị đơn ${total}`,
+          createdById: user.id,
+        },
+      });
+    }
   });
 
   revalidateOrders();

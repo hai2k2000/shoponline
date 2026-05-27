@@ -394,3 +394,11 @@ Updated: 2026-05-27
 - Added read and read-all admin POST routes.
 - Purchase receiving now creates a success notification for the receiving admin.
 - Build, Docker redeploy, production smoke, purchase smoke, and notification smoke passed.
+
+## 2026-05-27 Customer Timeline Update
+
+- Added `CustomerTimeline` Prisma model, `CustomerTimelineType` enum, and migration.
+- Added `/admin/customers/timeline` for customer care notes, calls, messages, support, and order events.
+- Added admin POST route for creating customer timeline entries.
+- Creating an order for a known customer now writes an `ORDER` timeline event.
+- Build, Docker redeploy, production smoke, and customer timeline smoke passed.

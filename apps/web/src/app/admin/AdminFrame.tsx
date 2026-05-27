@@ -14,6 +14,7 @@ const links = [
   ["Đơn hàng", "/admin/orders"],
   ["Vận chuyển", "/admin/shipments"],
   ["Khách hàng", "/admin/customers"],
+  ["CSKH", "/admin/customers/timeline"],
   ["Nhà cung cấp", "/admin/suppliers"],
   ["Thanh toán", "/admin/finance/payments"],
   ["Chi phí", "/admin/finance/expenses"],

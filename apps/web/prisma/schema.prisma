@@ -70,6 +70,14 @@ enum NotificationLevel {
   DANGER
 }
 
+enum CustomerTimelineType {
+  NOTE
+  CALL
+  MESSAGE
+  ORDER
+  SUPPORT
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -96,6 +104,7 @@ model User {
   payments     PaymentTransaction[]
   shipments    Shipment[]
   notifications Notification[]
+  customerTimelines CustomerTimeline[]
 }
 
 model Category {
@@ -197,6 +206,7 @@ model Customer {
   updatedAt   DateTime     @updatedAt
   orders      Order[]
   debts       Debt[]
+  timelines   CustomerTimeline[]
 }
 
 model Order {
@@ -342,6 +352,18 @@ model Notification {
   entityId   String?
   readAt     DateTime?
   createdAt  DateTime          @default(now())
+}
+
+model CustomerTimeline {
+  id          String               @id @default(cuid())
+  customerId  String
+  customer    Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type        CustomerTimelineType @default(NOTE)
+  title       String
+  note        String?
+  createdById String?
+  createdBy   User?                @relation(fields: [createdById], references: [id])
+  createdAt   DateTime             @default(now())
 }
 
 model AutomationRun {
