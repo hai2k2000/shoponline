@@ -10,6 +10,7 @@ export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [result, setResult] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [couponCode, setCouponCode] = useState("");
   const [pending, startTransition] = useTransition();
   useEffect(() => { setItems(JSON.parse(localStorage.getItem("shoponline.cart") || "[]")); }, []);
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
@@ -23,6 +24,7 @@ export default function CheckoutPage() {
           <label className="grid gap-1 text-sm font-semibold text-slate-700">Họ tên<input required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="name" /></label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700">Số điện thoại<input required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="phone" /></label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700">Email<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="email" type="email" /></label>
+          <label className="grid gap-1 text-sm font-semibold text-slate-700">Mã giảm giá<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal uppercase" name="couponCode" value={couponCode} onChange={(event) => setCouponCode(event.target.value.toUpperCase())} placeholder="SALE2026" /></label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700">Địa chỉ<textarea required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="address" rows={3} /></label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700">Ghi chú<textarea className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="note" rows={3} /></label>
           {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p> : null}

@@ -229,3 +229,11 @@
 - Added return create and status transition POST routes.
 - Receiving a completed-order return restores inventory; refunding writes a refund transaction.
 - Added and passed a VPS return/refund smoke through approve, receive, and refund.
+
+## 2026-05-27 Promotions
+
+- Added `Promotion` model and `DiscountType` enum with migration.
+- Added `/admin/promotions` workflow for coupon creation and toggling.
+- Checkout now applies valid coupon codes and writes order discount.
+- Coupon usage count increments after checkout.
+- Added and passed a VPS promotion smoke for admin coupon creation and public checkout.

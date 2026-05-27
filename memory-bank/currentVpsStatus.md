@@ -410,3 +410,11 @@ Updated: 2026-05-27
 - Receiving a return restores inventory only for completed orders to avoid double-counting stock.
 - Refunding creates `RefundTransaction`, updates the order to `RETURNED`, and marks payment as `REFUNDED`.
 - Build, Docker redeploy, production smoke, and return/refund smoke passed.
+
+## 2026-05-27 Promotion Update
+
+- Added `Promotion` Prisma model, `DiscountType` enum, and migration.
+- Added `/admin/promotions` for creating and toggling coupon codes.
+- Checkout now accepts coupon codes, validates active dates, usage limits, minimum order, and calculates fixed or percent discounts.
+- Coupon usage increments after successful checkout.
+- Build, Docker redeploy, production smoke, and promotion checkout smoke passed.

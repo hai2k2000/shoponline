@@ -13,6 +13,13 @@ function text(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
+function calcDiscount(promotion: { discountType: string; discountValue: unknown; minOrder: unknown; maxDiscount: unknown }, subtotal: number) {
+  if (subtotal < Number(promotion.minOrder || 0)) return 0;
+  const raw = promotion.discountType === "PERCENT" ? subtotal * Number(promotion.discountValue || 0) / 100 : Number(promotion.discountValue || 0);
+  const maxDiscount = promotion.maxDiscount == null ? raw : Math.min(raw, Number(promotion.maxDiscount || 0));
+  return Math.max(0, Math.min(subtotal, Math.floor(maxDiscount)));
+}
+
 export async function checkoutAction(formData: FormData) {
   const rawCart = text(formData, "cart");
   const items = JSON.parse(rawCart || "[]") as CartItem[];
@@ -39,7 +46,20 @@ export async function checkoutAction(formData: FormData) {
     }
     const setting = await tx.storeSetting.findUnique({ where: { id: "default" } });
     const shippingFee = Number(setting?.shippingFee || 0);
-    const order = await tx.order.create({ data: { orderCode: orderCode(), customerId: customer.id, subtotal, shippingFee, discount: 0, total: subtotal + shippingFee, orderStatus: "NEW", paymentStatus: "UNPAID", note: text(formData, "note") || null, items: { create: orderItems } } });
+    const couponCode = text(formData, "couponCode").toUpperCase();
+    let discount = 0;
+    if (couponCode) {
+      const now = new Date();
+      const promotion = await tx.promotion.findUnique({ where: { code: couponCode } });
+      if (!promotion || promotion.status !== "ACTIVE") throw new Error("Mã giảm giá không hợp lệ.");
+      if (promotion.startsAt && promotion.startsAt > now) throw new Error("Mã giảm giá chưa bắt đầu.");
+      if (promotion.endsAt && promotion.endsAt < now) throw new Error("Mã giảm giá đã hết hạn.");
+      if (promotion.usageLimit != null && promotion.usedCount >= promotion.usageLimit) throw new Error("Mã giảm giá đã hết lượt sử dụng.");
+      discount = calcDiscount(promotion, subtotal);
+      if (discount <= 0) throw new Error("Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá.");
+      await tx.promotion.update({ where: { id: promotion.id }, data: { usedCount: { increment: 1 } } });
+    }
+    const order = await tx.order.create({ data: { orderCode: orderCode(), customerId: customer.id, subtotal, shippingFee, discount, total: Math.max(0, subtotal + shippingFee - discount), orderStatus: "NEW", paymentStatus: "UNPAID", note: text(formData, "note") || null, items: { create: orderItems } } });
     await tx.activityLog.create({ data: { action: "PUBLIC_CHECKOUT", entityType: "Order", entityId: order.id, description: `Khách đặt đơn ${order.orderCode}` } });
     return { orderCode: order.orderCode };
   });

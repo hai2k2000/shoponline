@@ -86,6 +86,11 @@ enum ReturnStatus {
   REJECTED
 }
 
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -357,6 +362,24 @@ model Expense {
   status    RecordStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+model Promotion {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  description String?
+  discountType DiscountType @default(FIXED)
+  discountValue Decimal     @default(0)
+  minOrder    Decimal      @default(0)
+  maxDiscount Decimal?
+  usageLimit  Int?
+  usedCount   Int          @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      RecordStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Debt {
