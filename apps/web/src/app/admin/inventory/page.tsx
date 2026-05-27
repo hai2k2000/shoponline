@@ -1,14 +1,48 @@
-import Link from "next/link";
+﻿import { prisma } from "@/lib/prisma";
+import { InventoryClient } from "./InventoryClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function InventoryPage() {
+  const [products, transactions] = await Promise.all([
+    prisma.product.findMany({
+      where: { status: { not: "ARCHIVED" } },
+      orderBy: [{ updatedAt: "desc" }],
+      include: { category: { select: { name: true } }, inventory: true },
+    }),
+    prisma.inventoryTransaction.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      include: { product: { select: { name: true, sku: true } } },
+    }),
+  ]);
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? kho</h1>
-        <p className="text-slate-600">Import, export, adjust, l?ch s? v? c?nh b?o t?n th?p.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <InventoryClient
+      rows={products.map((row) => ({
+        productId: row.id,
+        name: row.name,
+        sku: row.sku,
+        categoryName: row.category?.name || null,
+        costPrice: Number(row.costPrice),
+        salePrice: Number(row.salePrice),
+        minStock: row.minStock,
+        status: row.status,
+        quantity: row.inventory?.quantity || 0,
+        reservedQuantity: row.inventory?.reservedQuantity || 0,
+        updatedAt: row.updatedAt.toISOString(),
+      }))}
+      transactions={transactions.map((item) => ({
+        id: item.id,
+        productName: item.product.name,
+        sku: item.product.sku,
+        type: item.type,
+        quantity: item.quantity,
+        beforeQuantity: item.beforeQuantity,
+        afterQuantity: item.afterQuantity,
+        note: item.note,
+        createdAt: item.createdAt.toISOString(),
+      }))}
+    />
   );
 }

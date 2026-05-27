@@ -62,3 +62,10 @@
 - Added server actions for create, update, and archive.
 - Added inventory initialization on product create.
 - Added product CRUD browser smoke test on VPS.
+
+## 2026-05-27 Inventory Module
+
+- Implemented real `/admin/inventory` module.
+- Added server actions for import, export, and adjust.
+- Added transaction ledger display.
+- Added inventory browser smoke test on VPS.

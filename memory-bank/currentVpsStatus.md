@@ -80,3 +80,20 @@ Updated: 2026-05-27
   - Edit product.
   - Archive product.
   - Verify archived status.
+
+## 2026-05-27 Inventory Module Update
+
+- Replaced `/admin/inventory` placeholder with a real Prisma-backed inventory module.
+- Added inventory KPI cards: products, total quantity, inventory value, low stock.
+- Added stock table with search and stock filters.
+- Added recent `InventoryTransaction` table.
+- Added import, export, and adjust stock modal workflows.
+- Export prevents negative available stock.
+- Every import/export/adjust writes `InventoryTransaction` and `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Import stock.
+  - Export stock.
+  - Adjust stock.
+  - Verify transaction notes.
