@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 const adminLinks = [
   ["S?n ph?m", "/admin/products"],
@@ -15,12 +19,15 @@ const adminLinks = [
 ];
 
 export default async function AdminDashboardPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/admin/login");
+
   const [products, categories, orders, customers, expenses] = await Promise.all([
-    prisma.product.count().catch(() => 0),
-    prisma.category.count().catch(() => 0),
-    prisma.order.count().catch(() => 0),
-    prisma.customer.count().catch(() => 0),
-    prisma.expense.aggregate({ _sum: { amount: true } }).catch(() => ({ _sum: { amount: 0 } })),
+    prisma.product.count(),
+    prisma.category.count(),
+    prisma.order.count(),
+    prisma.customer.count(),
+    prisma.expense.aggregate({ _sum: { amount: true } }),
   ]);
 
   const cards = [
@@ -38,8 +45,12 @@ export default async function AdminDashboardPage() {
           <div>
             <p className="text-sm font-semibold text-emerald-700">Admin</p>
             <h1 className="text-3xl font-semibold">Dashboard ?i?u h?nh</h1>
+            <p className="mt-1 text-sm text-slate-600">{user.name} ? {user.role}</p>
           </div>
-          <Link className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="/">Ra website</Link>
+          <div className="flex flex-wrap gap-2">
+            <Link className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="/">Ra website</Link>
+            <Link className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white" href="/admin/logout">??ng xu?t</Link>
+          </div>
         </header>
         <section className="grid gap-4 md:grid-cols-5">
           {cards.map(([label, value]) => (

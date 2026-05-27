@@ -39,3 +39,12 @@
 - Dashboard/report accuracy depends on correct inventory/order/finance rules.
 - Automation and AI should wait until enough reliable operational data exists.
 
+
+## 2026-05-27 VPS Auth Foundation
+
+- Added admin login/logout.
+- Added signed session cookie.
+- Protected admin routes with middleware.
+- Dashboard now requires current user and reads DB metrics dynamically.
+- Rebuilt and redeployed `shoponline-web`.
+- Browser auth smoke passed on VPS.

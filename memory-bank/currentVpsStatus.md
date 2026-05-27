@@ -37,3 +37,16 @@ Updated: 2026-05-27
 - Add real auth/session for `/admin/login`.
 - Build reusable admin layout and DataTable.
 - Implement category/product/inventory CRUD first.
+
+## 2026-05-27 Auth Foundation Update
+
+- Added signed cookie session for admin login.
+- Added `/admin/login` server action using seeded admin user.
+- Added `/admin/logout` route.
+- Added middleware guard for `/admin/*` except `/admin/login`.
+- `/admin/dashboard` now reads current user and dynamic database metrics at runtime.
+- Docker redeployed successfully.
+- Auth smoke passed:
+  - Anonymous `/admin/dashboard` redirects to `/admin/login`.
+  - `admin@shoponline.local` / `ShopOnline@2026` logs in.
+  - Logout returns to login.
