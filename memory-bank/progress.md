@@ -458,3 +458,14 @@
 - Cleaned a BOM from the inventory page file.
 - Deployed the updated inventory UI to the VPS production container.
 - Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-27 Customers UI Flow Pass
+
+- Refactored `/admin/customers` to use the shared admin UI primitives.
+- Added CRM KPI cards for total customers, active customers, customers with purchase history, total orders, and total spent.
+- Added search plus source, group, and status filters.
+- Added sortable table columns, pagination, status badges, and empty state.
+- Reworked customer create/edit/detail modals to match the new admin form shell and detail presentation.
+- Added `updatedAt` to the customers page payload for recency sorting and detail display.
+- Deployed the updated customers UI to the VPS production container.
+- Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
