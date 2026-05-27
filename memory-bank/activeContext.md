@@ -18,13 +18,14 @@ Continue backend completion and hardening for the deployed ShopOnline project on
 - Admin mutation flows should use `/api/admin/*` route handlers plus service-layer functions instead of Server Action mutations.
 - Admin POST routes should use shared auth/RBAC helpers, Zod form parsing, and typed redirect error handling.
 - `npm run smoke:regression` is the standard backend verification command after backend changes.
+- `npm run smoke:cleanup` is the standard cleanup command for accumulated smoke/UAT data. It runs as a dry-run by default; set `CONFIRM_SMOKE_CLEANUP=yes` to delete smoke records and archive smoke test users.
 
 ## Immediate Next Steps
 
-1. Define smoke-data cleanup/retention or staging strategy for repeated regression runs.
-2. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
-3. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
-4. Continue manual business UAT with real users on top of automated UAT page smoke.
+1. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
+2. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
+3. Continue manual business UAT with real users on top of automated UAT page smoke.
+4. Consider adding scheduled smoke cleanup after nightly/weekly regression runs if automated regression becomes cron-driven.
 
 ## Open Questions
 

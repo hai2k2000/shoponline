@@ -39,6 +39,18 @@
 - Dashboard/report accuracy depends on correct inventory/order/finance rules.
 - Automation and AI should wait until enough reliable operational data exists.
 
+## 2026-05-27 Smoke Data Cleanup
+
+- Added `scripts/cleanup-smoke-data.ts`.
+- Added `npm run smoke:cleanup`.
+- Cleanup defaults to dry-run and requires `CONFIRM_SMOKE_CLEANUP=yes` for destructive changes.
+- Cleanup removes known smoke/UAT orders, payments, shipments, purchases, inventory rows, products, categories, customers, suppliers, debts, expenses, promotions, notifications, timelines, and activity logs.
+- Smoke test users are archived instead of deleted to avoid user-related historical constraints.
+- Backed up Postgres before the first production cleanup.
+- Removed accumulated smoke data from repeated VPS regression runs.
+- Verified `npm run check` still passes after adding cleanup tooling.
+- Ran cleanup again after regression so the production DB dry-run returns zero matched smoke records.
+
 
 ## 2026-05-27 VPS Auth Foundation
 
