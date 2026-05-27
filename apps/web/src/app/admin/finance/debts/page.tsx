@@ -1,14 +1,36 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { DebtsClient } from "./DebtsClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function DebtsPage() {
+  const [rows, customers, suppliers] = await Promise.all([
+    prisma.debt.findMany({
+      orderBy: [{ updatedAt: "desc" }],
+      include: {
+        customer: { select: { name: true } },
+        supplier: { select: { name: true } },
+      },
+    }),
+    prisma.customer.findMany({ where: { status: { not: "ARCHIVED" } }, orderBy: { name: "asc" }, select: { id: true, name: true, phone: true } }),
+    prisma.supplier.findMany({ where: { status: { not: "ARCHIVED" } }, orderBy: { name: "asc" }, select: { id: true, name: true, phone: true } }),
+  ]);
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? c?ng n?</h1>
-        <p className="text-slate-600">Theo d?i c?ng n? kh?ch h?ng v? nh? cung c?p.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <DebtsClient
+      rows={rows.map((row) => ({
+        id: row.id,
+        type: row.type,
+        partyName: row.customer?.name || row.supplier?.name || "Chưa gắn đối tượng",
+        amount: Number(row.amount),
+        paidAmount: Number(row.paidAmount),
+        status: row.status,
+        dueDate: row.dueDate?.toISOString() || null,
+        note: row.note,
+        createdAt: row.createdAt.toISOString(),
+      }))}
+      customers={customers}
+      suppliers={suppliers}
+    />
   );
 }

@@ -203,12 +203,14 @@ model OrderItem {
 }
 
 model Expense {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   category  String
   title     String
-  amount    Decimal  @default(0)
+  amount    Decimal      @default(0)
   note      String?
-  createdAt DateTime @default(now())
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model Debt {
@@ -218,6 +220,9 @@ model Debt {
   paidAmount Decimal    @default(0)
   status     DebtStatus @default(OPEN)
   dueDate    DateTime?
+  note       String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
   customerId String?
   customer   Customer?  @relation(fields: [customerId], references: [id])
   supplierId String?

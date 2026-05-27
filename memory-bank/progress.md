@@ -94,3 +94,12 @@
 - Added stock export on completed orders and stock release on cancelled orders.
 - Added return workflow for completed orders.
 - Added order browser smoke test on VPS.
+
+## 2026-05-27 Finance CRUD
+
+- Implemented real `/admin/finance/expenses` module.
+- Implemented real `/admin/finance/debts` module.
+- Added finance management fields to Prisma schema.
+- Added server actions for expense create/update/archive.
+- Added server actions for debt create/update/payment/close.
+- Added finance browser smoke test on VPS.

@@ -1,14 +1,21 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { ExpensesClient } from "./ExpensesClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function ExpensesPage() {
+  const rows = await prisma.expense.findMany({ orderBy: [{ updatedAt: "desc" }] });
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? chi ph?</h1>
-        <p className="text-slate-600">Expense CRUD v? ?nh h??ng ??n l?i nhu?n.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <ExpensesClient
+      rows={rows.map((row) => ({
+        id: row.id,
+        category: row.category,
+        title: row.title,
+        amount: Number(row.amount),
+        note: row.note,
+        status: row.status,
+        createdAt: row.createdAt.toISOString(),
+      }))}
+    />
   );
 }

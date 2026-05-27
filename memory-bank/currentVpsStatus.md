@@ -151,3 +151,25 @@ Updated: 2026-05-27
   - Confirm order.
   - Complete order.
   - Verify completed status in the table.
+
+## 2026-05-27 Finance CRUD Update
+
+- Added finance management fields:
+  - `Expense.status`
+  - `Expense.updatedAt`
+  - `Debt.note`
+  - `Debt.createdAt`
+  - `Debt.updatedAt`
+- Replaced `/admin/finance/expenses` placeholder with a real expense CRUD module.
+- Expense module supports search, category/status filters, detail modal, create/edit modal, and archive action.
+- Replaced `/admin/finance/debts` placeholder with a real debt module.
+- Debt module supports customer receivables, supplier payables, partial payment updates, closing debts, search, type/status filters, and detail modal.
+- Finance mutations write `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create expense.
+  - Edit expense.
+  - Create customer debt.
+  - Record debt payment.
+  - Verify paid status in the table.
