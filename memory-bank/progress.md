@@ -469,3 +469,12 @@
 - Added `updatedAt` to the customers page payload for recency sorting and detail display.
 - Deployed the updated customers UI to the VPS production container.
 - Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-27 Reports UI Flow Pass
+
+- Refactored `/admin/reports` to use the shared admin UI primitives.
+- Added report KPI cards with contextual tones and hints for revenue, expenses, estimated profit, inventory value, order completion, receivables, and payables.
+- Added report tabs for sales, product sales, inventory, and debts to reduce vertical scanning.
+- Reworked report tables with status badges, empty states, row counts, and one active CSV export action.
+- Deployed the updated reports UI to the VPS production container.
+- Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
