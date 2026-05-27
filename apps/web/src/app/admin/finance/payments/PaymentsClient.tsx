@@ -1,14 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { createPaymentAction } from "./actions";
 
 type OrderOption = { id: string; orderCode: string; customer: string; total: number; paid: number; remaining: number; paymentStatus: string };
 type PaymentRow = { id: string; orderCode: string; customer: string; amount: number; method: string; reference: string | null; note: string | null; receivedBy: string | null; createdAt: string };
 
 const methods = ["CASH", "BANK_TRANSFER", "COD", "MOMO", "OTHER"];
 
-export function PaymentsClient({ orders, payments }: { orders: OrderOption[]; payments: PaymentRow[] }) {
+export function PaymentsClient({ orders, payments, sessionToken }: { orders: OrderOption[]; payments: PaymentRow[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const filtered = useMemo(() => {
@@ -22,7 +21,11 @@ export function PaymentsClient({ orders, payments }: { orders: OrderOption[]; pa
     <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
       <div className="mx-auto grid max-w-7xl gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
-          <div><p className="text-sm font-semibold text-emerald-700">Admin / Tài chính</p><h1 className="text-3xl font-semibold">Giao dịch thanh toán</h1><p className="mt-1 text-sm text-slate-600">Ghi nhận từng lần thu tiền và tự cập nhật trạng thái thanh toán của đơn hàng.</p></div>
+          <div>
+            <p className="text-sm font-semibold text-emerald-700">Admin / Tài chính</p>
+            <h1 className="text-3xl font-semibold">Giao dịch thanh toán</h1>
+            <p className="mt-1 text-sm text-slate-600">Ghi nhận từng lần thu tiền và tự cập nhật trạng thái thanh toán của đơn hàng.</p>
+          </div>
           <button className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => setModalOpen(true)}>Ghi nhận thanh toán</button>
         </header>
 
@@ -46,17 +49,18 @@ export function PaymentsClient({ orders, payments }: { orders: OrderOption[]; pa
           </div>
         </section>
       </div>
-      {modalOpen ? <PaymentModal orders={orders.filter((order) => order.remaining > 0)} onClose={() => setModalOpen(false)} /> : null}
+      {modalOpen ? <PaymentModal orders={orders.filter((order) => order.remaining > 0)} sessionToken={sessionToken} onClose={() => setModalOpen(false)} /> : null}
     </main>
   );
 }
 
-function PaymentModal({ orders, onClose }: { orders: OrderOption[]; onClose: () => void }) {
+function PaymentModal({ orders, sessionToken, onClose }: { orders: OrderOption[]; sessionToken: string; onClose: () => void }) {
   const [orderId, setOrderId] = useState(orders[0]?.id || "");
   const order = orders.find((item) => item.id === orderId);
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form action={createPaymentAction} className="grid w-full max-w-2xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+      <form action="/api/admin/payments" method="post" className="grid w-full max-w-2xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
         <div className="flex items-center justify-between border-b border-slate-100 pb-3"><h2 className="text-xl font-semibold">Ghi nhận thanh toán</h2><button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button></div>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Đơn hàng<select required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="orderId" value={orderId} onChange={(event) => setOrderId(event.target.value)}>{orders.map((item) => <option key={item.id} value={item.id}>{item.orderCode} - {item.customer} - còn {money(item.remaining)}</option>)}</select></label>

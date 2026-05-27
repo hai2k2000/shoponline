@@ -243,3 +243,9 @@
 - Added `/admin/audit` for browsing `ActivityLog`.
 - Added search, entity filter, metrics, and latest log table.
 - Added and passed a VPS audit page smoke.
+
+## 2026-05-27 Backend Hardening
+
+- Converted payment recording to `/api/admin/payments` route handler.
+- Added session token fallback for payment POST submissions.
+- Re-tested payment creation through the production UI.

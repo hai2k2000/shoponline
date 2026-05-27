@@ -424,3 +424,10 @@ Updated: 2026-05-27
 - Added `/admin/audit` to inspect existing `ActivityLog` records.
 - Audit page includes search, entity type filter, operational metrics, and the latest 500 activity entries.
 - Build, Docker redeploy, production smoke, and audit page smoke passed.
+
+## 2026-05-27 Backend Hardening Update
+
+- Converted admin payment recording from Server Action form submit to `/api/admin/payments` POST route.
+- Payment POST route verifies cookie session and falls back to the signed hidden session token used by server-rendered admin pages.
+- Payment form now redirects through the production host correctly and no longer depends on flaky Server Action POST cookies.
+- Build, Docker redeploy, production smoke, and payment browser smoke passed.
