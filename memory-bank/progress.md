@@ -249,3 +249,5 @@
 - Converted payment recording to `/api/admin/payments` route handler.
 - Added session token fallback for payment POST submissions.
 - Re-tested payment creation through the production UI.
+- Converted admin order creation and status changes to route handlers.
+- Added and passed an admin order hardening smoke for create plus status update.

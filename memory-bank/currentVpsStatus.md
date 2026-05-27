@@ -431,3 +431,6 @@ Updated: 2026-05-27
 - Payment POST route verifies cookie session and falls back to the signed hidden session token used by server-rendered admin pages.
 - Payment form now redirects through the production host correctly and no longer depends on flaky Server Action POST cookies.
 - Build, Docker redeploy, production smoke, and payment browser smoke passed.
+- Converted admin order creation and order status transitions to `/api/admin/orders` and `/api/admin/orders/status` POST routes.
+- Order POST routes use the same cookie/session-token fallback and production-host redirects.
+- Admin order creation and status transition smoke passed.
