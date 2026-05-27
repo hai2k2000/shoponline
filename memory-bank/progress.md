@@ -448,3 +448,13 @@
 - Reworked create/edit product modal to match the new admin form shell and controls.
 - Deployed the updated products UI to the VPS production container.
 - Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-27 Inventory UI Flow Pass
+
+- Refactored `/admin/inventory` to use the shared admin UI primitives.
+- Added inventory KPI cards for total products, total stock, reserved stock, low stock, out-of-available stock, and inventory value.
+- Added search, stock condition filter, sort selector, sortable table columns, pagination, stock badges, and empty state.
+- Reworked import/export/adjust inventory modal to match the new admin form shell and show selected SKU context.
+- Cleaned a BOM from the inventory page file.
+- Deployed the updated inventory UI to the VPS production container.
+- Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
