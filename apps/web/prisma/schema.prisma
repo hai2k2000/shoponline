@@ -70,6 +70,7 @@ model User {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   activityLogs ActivityLog[]
+  payments     PaymentTransaction[]
 }
 
 model Category {
@@ -186,6 +187,20 @@ model Order {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   items         OrderItem[]
+  payments      PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount       Decimal  @default(0)
+  method       String   @default("CASH")
+  reference    String?
+  note         String?
+  receivedById String?
+  receivedBy   User?    @relation(fields: [receivedById], references: [id])
+  createdAt    DateTime @default(now())
 }
 
 model OrderItem {

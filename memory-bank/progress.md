@@ -184,3 +184,9 @@
 - Pointed `cargo.io.vn` Nginx proxy to ShopOnline on `127.0.0.1:3002`.
 - Backed up old Nginx config.
 - Verified Nginx reload, domain health endpoint, and production smoke through `https://cargo.io.vn`.
+## 2026-05-27 Payment Transactions
+
+- Added `PaymentTransaction` model and migration.
+- Added payment recording workflow at `/admin/finance/payments`.
+- Decoupled order completion from payment status.
+- Added and passed a VPS browser smoke for payment creation.

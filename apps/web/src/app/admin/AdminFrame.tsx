@@ -13,6 +13,7 @@ const links = [
   ["Đơn hàng", "/admin/orders"],
   ["Khách hàng", "/admin/customers"],
   ["Nhà cung cấp", "/admin/suppliers"],
+  ["Thanh toán", "/admin/finance/payments"],
   ["Chi phí", "/admin/finance/expenses"],
   ["Công nợ", "/admin/finance/debts"],
   ["Báo cáo", "/admin/reports"],

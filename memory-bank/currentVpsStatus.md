@@ -360,3 +360,11 @@ Updated: 2026-05-27
   - `https://cargo.io.vn/api/health` returns `ok: true`.
   - `BASE_URL=https://cargo.io.vn npm run smoke:prod` passes.
   - Diff confirms only the `proxy_pass` line changed.
+## 2026-05-27 Payment Transactions Update
+
+- Added `PaymentTransaction` Prisma model and migration.
+- Linked payments to `Order` and optional receiving `User`.
+- Added `/admin/finance/payments` for recording real payment receipts.
+- Payment records store amount, method, reference, note, receiver, and timestamp.
+- Order payment status now updates from actual payment totals instead of order completion.
+- Build, Docker redeploy, production smoke, and browser payment smoke passed.

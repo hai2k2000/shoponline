@@ -147,7 +147,7 @@ export async function updateOrderStatusAction(formData: FormData) {
       }
     }
 
-    await tx.order.update({ where: { id }, data: { orderStatus: nextStatus, paymentStatus: nextStatus === "COMPLETED" ? "PAID" : order.paymentStatus } });
+    await tx.order.update({ where: { id }, data: { orderStatus: nextStatus } });
     await tx.activityLog.create({ data: { userId: user.id, action: "UPDATE_ORDER_STATUS", entityType: "Order", entityId: order.id, description: `Đổi trạng thái ${order.orderCode} sang ${nextStatus}` } });
   });
 
