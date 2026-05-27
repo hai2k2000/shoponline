@@ -302,3 +302,22 @@ Updated: 2026-05-27
   - Docker redeploy passes.
   - Production smoke passes.
   - All ShopOnline containers report `healthy`.
+
+## 2026-05-27 Proxy, Security Headers, Restore Script
+
+- Replaced deprecated `apps/web/src/middleware.ts` with `apps/web/src/proxy.ts`.
+- Verified Next.js build no longer shows the middleware deprecation warning.
+- Added baseline security headers in `apps/web/next.config.ts`:
+  - `X-Content-Type-Options`
+  - `X-Frame-Options`
+  - `Referrer-Policy`
+  - `Permissions-Policy`
+- Added `scripts/restore-postgres.sh`.
+- Added `npm run restore:postgres`.
+- Restore script requires `CONFIRM_RESTORE=yes` and refuses accidental restores.
+- Verified:
+  - Web build passes.
+  - Docker redeploy passes.
+  - Production smoke passes.
+  - Headers are present.
+  - Restore guard works.

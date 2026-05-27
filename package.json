@@ -17,6 +17,7 @@
     "deploy:preview": "docker compose up -d --build",
     "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
     "backup:postgres": "./scripts/backup-postgres.sh",
+    "restore:postgres": "./scripts/restore-postgres.sh",
     "smoke:prod": "./scripts/smoke-production.sh"
   }
 }

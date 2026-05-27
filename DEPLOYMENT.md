@@ -32,6 +32,15 @@ curl http://127.0.0.1:3002/api/health
 
 Expected: JSON with `ok: true` and `database: "ok"`.
 
+## Security Headers
+
+The Next.js config sets baseline response headers:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+
 ## Backups
 
 Manual backup:
@@ -42,6 +51,15 @@ npm run backup:postgres
 ```
 
 Default backup folder: `/opt/shoponline/backups/postgres`.
+
+Restore from backup:
+
+```sh
+cd /opt/shoponline
+CONFIRM_RESTORE=yes npm run restore:postgres -- /opt/shoponline/backups/postgres/shoponline-YYYYMMDD-HHMMSS.sql.gz
+```
+
+The restore script refuses to run unless `CONFIRM_RESTORE=yes` is set.
 
 Active cron on the VPS:
 

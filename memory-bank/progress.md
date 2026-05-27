@@ -162,3 +162,10 @@
 - Added retry behavior to production smoke script.
 - Added logrotate config for ShopOnline cron logs.
 - Verified all ShopOnline containers report healthy.
+
+## 2026-05-27 Proxy, Security Headers, Restore Script
+
+- Migrated deprecated middleware convention to Next.js `proxy.ts`.
+- Added baseline security headers.
+- Added guarded Postgres restore script.
+- Verified build, deploy, smoke, security headers, and restore guard.
