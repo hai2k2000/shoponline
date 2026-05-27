@@ -449,3 +449,15 @@ Updated: 2026-05-27
 - Redirects use `x-forwarded-proto` and `x-forwarded-host`.
 - Added `/tmp/shoponline-customers-suppliers-smoke.js`.
 - Build, Docker redeploy, customers/suppliers smoke, and `npm run smoke:prod` passed.
+
+## 2026-05-27 Products And Categories Hardening Update
+
+- Converted category create/update to `/api/admin/categories`.
+- Converted category archive to `/api/admin/categories/archive`.
+- Converted product create/update to `/api/admin/products`.
+- Converted product archive to `/api/admin/products/archive`.
+- Product/category pages now pass `SESSION_COOKIE` token into client forms.
+- Route handlers use cookie auth first, then `sessionToken` fallback for proxied/admin POST flows.
+- Product create still initializes inventory and writes an initial `IMPORT` transaction when stock is provided.
+- Added `/tmp/shoponline-products-categories-smoke.js`.
+- Build, Docker redeploy, products/categories smoke, and `npm run smoke:prod` passed.

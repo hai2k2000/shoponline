@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
-import { archiveCategoryAction, createCategoryAction, updateCategoryAction } from "./actions";
 
 type CategoryRow = {
   id: string;
@@ -20,7 +19,7 @@ type ModalState = { mode: "create" } | { mode: "edit"; row: CategoryRow } | null
 
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 
-export function CategoriesClient({ rows }: { rows: CategoryRow[] }) {
+export function CategoriesClient({ rows, sessionToken }: { rows: CategoryRow[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [modal, setModal] = useState<ModalState>(null);
@@ -80,7 +79,8 @@ export function CategoriesClient({ rows }: { rows: CategoryRow[] }) {
                       <div className="flex justify-end gap-2">
                         <button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "edit", row })}>Sửa</button>
                         {row.status !== "ARCHIVED" ? (
-                          <form action={archiveCategoryAction} onSubmit={(event) => { if (!confirm("Lưu trữ danh mục này?")) event.preventDefault(); }}>
+                          <form action="/api/admin/categories/archive" method="post" onSubmit={(event) => { if (!confirm("Lưu trữ danh mục này?")) event.preventDefault(); }}>
+                            <input type="hidden" name="sessionToken" value={sessionToken} />
                             <input type="hidden" name="id" value={row.id} />
                             <button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700">Lưu trữ</button>
                           </form>
@@ -95,17 +95,18 @@ export function CategoriesClient({ rows }: { rows: CategoryRow[] }) {
           </div>
         </section>
       </div>
-      {modal ? <CategoryModal modal={modal} rows={rows} onClose={() => setModal(null)} /> : null}
+      {modal ? <CategoryModal modal={modal} rows={rows} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
     </main>
   );
 }
 
-function CategoryModal({ modal, rows, onClose }: { modal: ModalState; rows: CategoryRow[]; onClose: () => void }) {
+function CategoryModal({ modal, rows, sessionToken, onClose }: { modal: ModalState; rows: CategoryRow[]; sessionToken: string; onClose: () => void }) {
   const row = modal?.mode === "edit" ? modal.row : null;
-  const action = row ? updateCategoryAction : createCategoryAction;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form action={action} className="grid w-full max-w-2xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+      <form action="/api/admin/categories" method="post" className="grid w-full max-w-2xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
+        <input type="hidden" name="mode" value={row ? "update" : "create"} />
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <h2 className="text-xl font-semibold">{row ? "Sửa danh mục" : "Tạo danh mục"}</h2>
           <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button>

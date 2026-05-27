@@ -1,9 +1,13 @@
-﻿import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { SESSION_COOKIE } from "@/lib/session";
 import { ProductsClient } from "./ProductsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [rows, categories] = await Promise.all([
     prisma.product.findMany({
       orderBy: [{ updatedAt: "desc" }],
@@ -14,6 +18,7 @@ export default async function ProductsPage() {
 
   return (
     <ProductsClient
+      sessionToken={sessionToken}
       categories={categories}
       rows={rows.map((row) => ({
         id: row.id,

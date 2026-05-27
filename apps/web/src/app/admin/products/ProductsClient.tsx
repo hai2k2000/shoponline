@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
-import { archiveProductAction, createProductAction, updateProductAction } from "./actions";
 
 type ProductRow = {
   id: string;
@@ -27,7 +26,7 @@ type CategoryOption = { id: string; name: string };
 type ModalState = { mode: "create" } | { mode: "edit"; row: ProductRow } | null;
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 
-export function ProductsClient({ rows, categories }: { rows: ProductRow[]; categories: CategoryOption[] }) {
+export function ProductsClient({ rows, categories, sessionToken }: { rows: ProductRow[]; categories: CategoryOption[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -88,7 +87,7 @@ export function ProductsClient({ rows, categories }: { rows: ProductRow[]; categ
                     <td className="px-4 py-3"><strong>{money(row.salePrice)}</strong>{row.promotionPrice ? <p className="text-xs text-emerald-700">KM {money(row.promotionPrice)}</p> : null}</td>
                     <td className="px-4 py-3">{row.quantity}<p className="text-xs text-slate-500">Giữ: {row.reservedQuantity} · Min: {row.minStock}</p></td>
                     <td className="px-4 py-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{viStatus(row.status)}</span></td>
-                    <td className="px-4 py-3"><div className="flex justify-end gap-2"><button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "edit", row })}>Sửa</button>{row.status !== "ARCHIVED" ? <form action={archiveProductAction} onSubmit={(event) => { if (!confirm("Lưu trữ sản phẩm này?")) event.preventDefault(); }}><input type="hidden" name="id" value={row.id} /><button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700">Lưu trữ</button></form> : null}</div></td>
+                    <td className="px-4 py-3"><div className="flex justify-end gap-2"><button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "edit", row })}>Sửa</button>{row.status !== "ARCHIVED" ? <form action="/api/admin/products/archive" method="post" onSubmit={(event) => { if (!confirm("Lưu trữ sản phẩm này?")) event.preventDefault(); }}><input type="hidden" name="sessionToken" value={sessionToken} /><input type="hidden" name="id" value={row.id} /><button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700">Lưu trữ</button></form> : null}</div></td>
                   </tr>
                 ))}
                 {!filtered.length ? <tr><td className="px-4 py-10 text-center text-slate-500" colSpan={8}>Không có sản phẩm phù hợp.</td></tr> : null}
@@ -97,17 +96,18 @@ export function ProductsClient({ rows, categories }: { rows: ProductRow[]; categ
           </div>
         </section>
       </div>
-      {modal ? <ProductModal modal={modal} categories={categories} onClose={() => setModal(null)} /> : null}
+      {modal ? <ProductModal modal={modal} categories={categories} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
     </main>
   );
 }
 
-function ProductModal({ modal, categories, onClose }: { modal: ModalState; categories: CategoryOption[]; onClose: () => void }) {
+function ProductModal({ modal, categories, sessionToken, onClose }: { modal: ModalState; categories: CategoryOption[]; sessionToken: string; onClose: () => void }) {
   const row = modal?.mode === "edit" ? modal.row : null;
-  const action = row ? updateProductAction : createProductAction;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form action={action} className="grid max-h-[calc(100vh-32px)] w-full max-w-4xl gap-4 overflow-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+      <form action="/api/admin/products" method="post" className="grid max-h-[calc(100vh-32px)] w-full max-w-4xl gap-4 overflow-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
+        <input type="hidden" name="mode" value={row ? "update" : "create"} />
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3"><h2 className="text-xl font-semibold">{row ? "Sửa sản phẩm" : "Tạo sản phẩm"}</h2><button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button></div>
         {row ? <input type="hidden" name="id" value={row.id} /> : null}
         <div className="grid gap-3 md:grid-cols-2">
