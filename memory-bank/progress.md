@@ -103,3 +103,10 @@
 - Added server actions for expense create/update/archive.
 - Added server actions for debt create/update/payment/close.
 - Added finance browser smoke test on VPS.
+
+## 2026-05-27 Dashboard
+
+- Rebuilt `/admin/dashboard` with clean Vietnamese text.
+- Added real metrics for revenue, profit, orders, receivables, payables, expenses, stock, and master data counts.
+- Added recent orders and quick navigation.
+- Added dashboard browser smoke test on VPS.

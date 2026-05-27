@@ -173,3 +173,18 @@ Updated: 2026-05-27
   - Create customer debt.
   - Record debt payment.
   - Verify paid status in the table.
+
+## 2026-05-27 Dashboard Update
+
+- Rebuilt `/admin/dashboard` with readable Vietnamese text.
+- Dashboard now reads real runtime metrics:
+  - Completed revenue.
+  - Estimated profit.
+  - Today/month order counts.
+  - Receivables and payables.
+  - Monthly active expenses.
+  - Low stock count.
+  - Product/category/customer/supplier/order totals.
+- Added recent order table and quick navigation.
+- Build and Docker redeploy passed.
+- Browser dashboard smoke passed.
