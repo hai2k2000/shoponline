@@ -21,7 +21,7 @@ Continue backend completion and hardening for the deployed ShopOnline project on
 
 ## Immediate Next Steps
 
-1. Prepare commit grouping for the backend hardening batch.
+1. Run/automate UAT checks for the main admin/public UI flows.
 2. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
 3. Consider data cleanup/retention strategy for smoke-generated records if test data volume becomes an issue.
 4. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
@@ -29,5 +29,4 @@ Continue backend completion and hardening for the deployed ShopOnline project on
 ## Open Questions
 
 - Confirm final domain/subdomain for ShopOnline.
-- Confirm when to push/commit the current VPS worktree changes.
-- Confirm whether to commit/push `.github/workflows/ci.yml` with the current backend hardening batch.
+- Confirm final UAT acceptance criteria before handing off to real users.

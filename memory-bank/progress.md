@@ -398,3 +398,9 @@
 - Added `check:ci` for CI-safe checks that do not depend on VPS-only backup files or a running production service.
 - Added `audit:high` so high/critical dependency findings fail CI while the current moderate upstream Next/PostCSS advisory remains tracked separately.
 - Passed `npm run check:ci` on the VPS.
+
+## 2026-05-27 Backend Hardening Commits And GitHub CI
+
+- Committed and pushed the backend hardening batch to GitHub.
+- Fixed CI by adding Prisma client generation to `check:ci`.
+- Confirmed GitHub Actions CI passed on push to `main`.

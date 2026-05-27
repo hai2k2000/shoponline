@@ -644,3 +644,16 @@ Updated: 2026-05-27
 - `check:ci` runs lint, build, and high/critical audit gate.
 - Verified `npm run check:ci` passes on the VPS.
 - Current npm audit still reports only the known 2 moderate Next/PostCSS findings, so the high/critical gate passes.
+
+## 2026-05-27 Backend Hardening Commits And GitHub CI
+
+- Committed the backend hardening batch in focused commits:
+  - `21bf1cc Refactor admin mutations into services`
+  - `eb15580 Extract public and reporting services`
+  - `a463582 Add regression and deployment tooling`
+  - `220b2bf Update backend hardening memory`
+- Pushed `main` to `git@github.com:hai2k2000/shoponline.git`.
+- Initial GitHub Actions run failed because CI did not generate Prisma client before `next build`.
+- Added `fd8a3e5 Generate Prisma client in CI checks`.
+- Pushed the CI fix.
+- GitHub Actions run `26514371356` passed.
