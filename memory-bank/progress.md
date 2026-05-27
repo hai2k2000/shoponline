@@ -131,3 +131,12 @@
 - Implemented real `/admin/settings` module.
 - Added update action for store name, logo, contact, shipping fee, and inventory strategy.
 - Added settings browser smoke test on VPS.
+
+## 2026-05-27 Public Storefront
+
+- Implemented real public home page.
+- Implemented real `/products` page.
+- Implemented localStorage cart at `/cart`.
+- Implemented public checkout at `/checkout`.
+- Implemented order tracking at `/tracking`.
+- Added storefront browser smoke test on VPS.

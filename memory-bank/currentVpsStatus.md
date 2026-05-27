@@ -241,3 +241,19 @@ Updated: 2026-05-27
 - Settings mutation writes `ActivityLog`.
 - Build and Docker redeploy passed.
 - Browser settings smoke passed.
+
+## 2026-05-27 Public Storefront Update
+
+- Rebuilt public home page with real store settings and latest products.
+- Replaced `/products` placeholder with real public product listing from active products and available inventory.
+- Added localStorage cart at `/cart`.
+- Added public checkout at `/checkout`.
+- Public checkout creates a customer, creates an order, reserves stock, and writes `ActivityLog`.
+- Added `/tracking?code=...` order lookup.
+- Build and Docker redeploy passed.
+- Browser storefront smoke passed:
+  - Open products.
+  - Add product to cart.
+  - Checkout.
+  - Receive order code.
+  - Track order by code.
