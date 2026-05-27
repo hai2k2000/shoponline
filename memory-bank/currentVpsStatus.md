@@ -473,3 +473,174 @@ Updated: 2026-05-27
 - Route handlers use cookie auth first, then `sessionToken` fallback for proxied/admin POST flows.
 - Added `/tmp/shoponline-finance-hardening-smoke.js`.
 - Build, Docker redeploy, finance smoke, and `npm run smoke:prod` passed.
+
+## 2026-05-27 Admin API RBAC Consolidation
+
+- Added shared `apps/web/src/lib/admin-api.ts` helper for admin route auth, session-token fallback, proxy-aware redirects, and backend permission checks.
+- Consolidated duplicated admin `getCurrentUserFromForm` and proxy URL helper logic into the shared helper.
+- Applied backend RBAC checks to category, product, customer, supplier, inventory, order, finance, shipment, purchase, return, promotion, notification, and customer timeline POST routes.
+- Build passed on VPS after the refactor.
+
+## 2026-05-27 Users And Settings Route Handler Update
+
+- Added `/api/admin/users`, `/api/admin/users/archive`, and `/api/admin/users/reset-password` route handlers.
+- Added `/api/admin/settings` route handler.
+- Updated users and settings admin pages to submit to API routes with `sessionToken` fallback instead of direct Server Actions.
+- Build passed on VPS after the update.
+
+## 2026-05-27 Core Backend Service Layer
+
+- Added `apps/web/src/lib/admin-form.ts` with Zod-based `FormData` parsing helpers and typed admin form errors.
+- Added service layer modules:
+  - `inventory-service.ts`
+  - `order-service.ts`
+  - `payment-service.ts`
+  - `purchase-service.ts`
+  - `return-service.ts`
+- Refactored inventory, order, payment, purchase, and return route handlers so routes handle auth/validation/redirect while services handle transactions and business rules.
+- Added `scripts/smoke-admin-core.ts` and `npm run smoke:admin-core` for HTTP smoke coverage of inventory import, order creation/completion, payment recording, purchase creation, and purchase receiving.
+- Docker redeploy passed.
+- `npm run smoke:prod` and `npm run smoke:admin-core` passed on VPS.
+
+## 2026-05-27 CRM And Finance Service Layer
+
+- Added service modules:
+  - `customer-service.ts`
+  - `supplier-service.ts`
+  - `expense-service.ts`
+  - `debt-service.ts`
+- Refactored customer, supplier, expense, and debt route handlers to use Zod form validation and service-layer mutations.
+- Added `scripts/smoke-admin-crm-finance.ts` and `npm run smoke:admin-crm-finance`.
+- Smoke covers customer create/update/archive, supplier create/update/archive, expense create/update/archive, debt create/payment/close.
+- Docker redeploy passed.
+- `npm run smoke:prod`, `npm run smoke:admin-core`, and `npm run smoke:admin-crm-finance` passed on VPS.
+
+## 2026-05-27 Catalog And Admin System Service Layer
+
+- Added service modules:
+  - `catalog-service.ts`
+  - `promotion-service.ts`
+  - `shipment-service.ts`
+  - `admin-system-service.ts`
+- Refactored category, product, promotion, shipment, notification, customer timeline, settings, and user route handlers to use Zod validation and service-layer mutations.
+- Added `scripts/smoke-admin-catalog-system.ts` and `npm run smoke:admin-catalog-system`.
+- Smoke covers category/product create/archive, promotion create/toggle, settings update, notification read, customer timeline note, shipment create/status.
+- Docker redeploy passed.
+- `npm run smoke:prod`, `npm run smoke:admin-core`, `npm run smoke:admin-crm-finance`, and `npm run smoke:admin-catalog-system` passed on VPS.
+
+## 2026-05-27 Admin Error Handling And Regression Smoke
+
+- Added shared admin route error redirects for typed validation, business-rule, and not-found failures.
+- Refactored admin POST routes to redirect with consistent `error` and `message` query params instead of returning HTTP 500 for expected failures.
+- Added `scripts/smoke-admin-negative.ts` and `npm run smoke:admin-negative`.
+- Negative smoke covers RBAC denial, validation failure, and not-found handling.
+- Added aggregate smoke scripts:
+  - `npm run smoke:admin`
+  - `npm run smoke:regression`
+- Removed legacy admin Server Action mutation files that were replaced by `/api/admin/*` route handlers.
+- Remaining Server Actions are admin login and public checkout only.
+- Build, Docker redeploy, `npm run smoke:regression`, and container health check passed.
+
+## 2026-05-27 Admin Auth Smoke
+
+- Added `scripts/smoke-admin-auth.ts` and `npm run smoke:admin-auth`.
+- Added it to the aggregate `npm run smoke:admin` chain.
+- Smoke covers unauthenticated admin dashboard redirect, authenticated dashboard access, tampered cookie rejection, unauthenticated admin POST rejection, inactive session-token rejection, and role denial for settings.
+- `npm run smoke:admin-auth` and `npm run smoke:regression` passed on VPS.
+- `npm audit` still reports 2 moderate findings from `next@16.2.6` depending on `postcss@8.4.31`; `next@latest` is still `16.2.6`, so this remains an upstream dependency issue rather than a safe local upgrade.
+
+## 2026-05-27 Admin Error Coverage Completion
+
+- Wrapped remaining catalog, CRM, finance, promotion, notification, shipment, user, and settings admin route handlers with `redirectWithAdminError`.
+- Confirmed every `/api/admin/*` route that calls `parseAdminForm` now also imports/uses `redirectWithAdminError`.
+- Expanded `scripts/smoke-admin-negative.ts` to cover category missing ID, customer archive missing ID, debt missing customer, and short user password validation.
+- Build, Docker redeploy, `npm run smoke:regression`, and container health check passed.
+
+## 2026-05-27 Public Checkout Service Layer
+
+- Added `apps/web/src/server/services/checkout-service.ts`.
+- Refactored public `checkoutAction` to parse form data, call `createPublicCheckoutOrder`, and return controlled user-facing errors.
+- Checkout transaction logic now lives in the service layer: customer creation, inventory reservation, promotion validation/usage increment, order creation, and activity logging.
+- Added `scripts/smoke-checkout.ts` and `npm run smoke:checkout`.
+- `npm run smoke:regression` now includes checkout smoke after production and admin smoke.
+- Checkout smoke covers successful checkout totals, inventory reservation, promotion usage, activity log creation, low-stock failure, and exhausted-coupon failure.
+- Build, Docker redeploy, `npm run smoke:regression`, and container health check passed.
+
+## 2026-05-27 Reporting Service Layer
+
+- Added `apps/web/src/server/services/reporting-service.ts`.
+- Moved admin reports aggregation out of `admin/reports/page.tsx` into `getReportsData`.
+- Moved admin dashboard metrics/recent-orders aggregation out of `admin/dashboard/page.tsx` into `getDashboardData`.
+- Added `scripts/smoke-reporting.ts` and `npm run smoke:reporting`.
+- Added reporting smoke to `npm run smoke:regression`.
+- Reporting smoke covers revenue, expenses, receivable/payable, inventory valuation/availability, product-sales revenue/profit, low-stock dashboard count, and recent dashboard order presence.
+- Build, Docker redeploy, `npm run smoke:regression`, and container health check passed.
+
+## 2026-05-27 Public Tracking Service Layer
+
+- Added `apps/web/src/server/services/tracking-service.ts`.
+- Refactored `/tracking` page to use `findTrackingOrder` DTO output instead of querying Prisma directly in the page.
+- Tracking lookup now normalizes order codes to uppercase and returns only customer/order/item fields needed by the public page.
+- Added `scripts/smoke-tracking.ts` and `npm run smoke:tracking`.
+- Added tracking smoke to `npm run smoke:regression`.
+- Tracking smoke covers service lookup with lowercase code, missing-order null result, HTTP render for an existing order, and HTTP render for the missing-order state.
+- Build, Docker redeploy, `npm run smoke:regression`, and container health check passed.
+
+## 2026-05-27 Production Deploy Runbook Script
+
+- Added `scripts/deploy-production.sh`.
+- Added `npm run deploy:prod`.
+- Deploy script performs Postgres backup, app build, Docker rebuild/restart for `shoponline-web`, health wait, and full `npm run smoke:regression`.
+- Added optional switches:
+  - `SKIP_BACKUP=yes`
+  - `SKIP_BUILD=yes`
+  - `SKIP_REGRESSION=yes`
+- Updated `DEPLOYMENT.md` to make `npm run deploy:prod` the standard production deploy path.
+- Ran `npm run deploy:prod` successfully on the VPS.
+- Verified a non-empty backup was created at `/opt/shoponline/backups/postgres/shoponline-20260527-200434.sql.gz`.
+- Container health check passed after deploy.
+
+## 2026-05-27 Backup Restore Verification
+
+- Added `scripts/verify-postgres-backup.sh`.
+- Added `npm run backup:verify`.
+- Backup verification checks gzip integrity, creates a temporary Postgres database, restores the backup into it, verifies public tables exist, and drops the temporary database on exit.
+- `deploy:prod` now runs `backup:verify` after creating a backup unless `SKIP_BACKUP_VERIFY=yes` is set.
+- Updated `DEPLOYMENT.md` with backup verification commands.
+- Verified latest backup manually with `npm run backup:verify`; restore passed with 25 public tables.
+- Ran `npm run deploy:prod` successfully with backup verification included.
+- Latest verified deploy backup: `/opt/shoponline/backups/postgres/shoponline-20260527-200845.sql.gz`.
+- Confirmed no `shoponline_verify_*` temporary databases remain and `shoponline-web` is healthy.
+
+## 2026-05-27 CI Check Command And Lint Baseline
+
+- Added root `npm run check`.
+- `check` runs:
+  - `npm run lint`
+  - `npm run build`
+  - `npm run backup:verify`
+  - `npm run smoke:regression`
+- Fixed lint errors in:
+  - `apps/web/src/app/admin/audit/AuditClient.tsx`
+  - `apps/web/src/app/cart/page.tsx`
+  - `apps/web/src/app/checkout/page.tsx`
+- Silenced the intentional raw `<img>` usage warning in `PublicProductsClient` to keep lint output clean while avoiding Next image domain config risks for arbitrary admin thumbnail URLs.
+- Ran `npm run check` successfully with clean lint, build, backup verify, and full regression smoke.
+- Ran `npm run deploy:prod` successfully after the lint/check update.
+- Latest deploy-created backup: `/opt/shoponline/backups/postgres/shoponline-20260527-201620.sql.gz`.
+- `shoponline-web` is healthy.
+
+## 2026-05-27 GitHub Actions CI Workflow
+
+- Added `.github/workflows/ci.yml`.
+- Added root `npm run check:ci`.
+- Added root `npm run audit:high`.
+- GitHub Actions workflow runs on pull requests and pushes to `main`.
+- CI steps:
+  - checkout
+  - setup Node 22 with npm cache
+  - `npm ci`
+  - `npm run check:ci`
+- `check:ci` runs lint, build, and high/critical audit gate.
+- Verified `npm run check:ci` passes on the VPS.
+- Current npm audit still reports only the known 2 moderate Next/PostCSS findings, so the high/critical gate passes.

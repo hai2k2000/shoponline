@@ -2,7 +2,7 @@
 
 ## Current Task
 
-Prepare project memory and agent instructions before implementation.
+Continue backend completion and hardening for the deployed ShopOnline project on VPS.
 
 ## Latest Decisions
 
@@ -15,22 +15,19 @@ Prepare project memory and agent instructions before implementation.
   - Redis `6381`
 - Use list-first admin UI patterns where forms and lists would otherwise create unbalanced layouts.
 - Core data and reports must be real database values.
+- Admin mutation flows should use `/api/admin/*` route handlers plus service-layer functions instead of Server Action mutations.
+- Admin POST routes should use shared auth/RBAC helpers, Zod form parsing, and typed redirect error handling.
+- `npm run smoke:regression` is the standard backend verification command after backend changes.
 
 ## Immediate Next Steps
 
-1. Configure GitHub write access for `hai2k2000/shoponline.git` or push from a local machine with credentials.
-2. Choose/confirm stack.
-3. Scaffold project.
-4. Add Docker Compose for web/API/Postgres/Redis.
-5. Add database schema and migrations.
-6. Add auth/RBAC.
-7. Build dashboard shell and admin layout.
-8. Implement categories/products/inventory first.
+1. Prepare commit grouping for the backend hardening batch.
+2. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
+3. Consider data cleanup/retention strategy for smoke-generated records if test data volume becomes an issue.
+4. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
 
 ## Open Questions
 
 - Confirm final domain/subdomain for ShopOnline.
-- Confirm whether public storefront and admin are one app or separate apps.
-- Confirm preferred frontend/backend stack if not already fixed.
-- Confirm initial admin account username/password policy.
-
+- Confirm when to push/commit the current VPS worktree changes.
+- Confirm whether to commit/push `.github/workflows/ci.yml` with the current backend hardening batch.
