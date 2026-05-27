@@ -438,3 +438,13 @@
 - Refactored `/admin/orders` to follow the screen flow more closely: breadcrumb, KPI cards, search, status/payment filters, sortable columns, pagination, empty state, status badges, and cleaner create/detail modal layout.
 - Deployed the updated UI to the VPS production container.
 - Verified lint, build, production deploy, full regression smoke, UAT page smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-27 Products UI Flow Pass
+
+- Refactored `/admin/products` to use the shared admin UI primitives.
+- Added catalog KPI cards for total products, active products, low stock, reserved stock, and inventory value.
+- Added search plus category, status, and stock filters.
+- Added sortable table columns, pagination, stock/status badges, and empty state.
+- Reworked create/edit product modal to match the new admin form shell and controls.
+- Deployed the updated products UI to the VPS production container.
+- Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.

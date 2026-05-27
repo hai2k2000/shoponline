@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { AdminPage, Button, DataPanel, EmptyState, Field, FilterBar, inputClass, PageHeader, Pagination, SearchField, SelectField, StatCard, StatusBadge, textareaClass, type Tone } from "@/components/admin/ui";
 
 type ProductRow = {
   id: string;
@@ -24,111 +26,182 @@ type ProductRow = {
 
 type CategoryOption = { id: string; name: string };
 type ModalState = { mode: "create" } | { mode: "edit"; row: ProductRow } | null;
+type SortKey = "updatedAt" | "name" | "sku" | "salePrice" | "quantity" | "status";
+
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
+const pageSize = 12;
 
 export function ProductsClient({ rows, categories, sessionToken }: { rows: ProductRow[]; categories: CategoryOption[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
   const [modal, setModal] = useState<ModalState>(null);
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return rows.filter((row) => {
-      const matchesTerm = !term || [row.name, row.sku, row.slug, row.categoryName || ""].some((value) => value.toLowerCase().includes(term));
-      const matchesStatus = !status || row.status === status;
-      const matchesCategory = !categoryId || row.categoryId === categoryId;
-      return matchesTerm && matchesStatus && matchesCategory;
-    });
-  }, [categoryId, query, rows, status]);
+    return rows
+      .filter((row) => {
+        const available = row.quantity - row.reservedQuantity;
+        const matchesTerm = !term || [row.name, row.sku, row.slug, row.categoryName || "", row.shortDescription || ""].some((value) => value.toLowerCase().includes(term));
+        const matchesStatus = !status || row.status === status;
+        const matchesCategory = !categoryId || row.categoryId === categoryId;
+        const matchesStock = !stockFilter || (stockFilter === "low" ? row.quantity <= row.minStock : stockFilter === "available" ? available > 0 : available <= 0);
+        return matchesTerm && matchesStatus && matchesCategory && matchesStock;
+      })
+      .sort((left, right) => compareProducts(left, right, sortKey, sortDirection));
+  }, [categoryId, query, rows, sortDirection, sortKey, status, stockFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const visibleRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const activeCount = rows.filter((row) => row.status === "ACTIVE").length;
+  const lowStockCount = rows.filter((row) => row.quantity <= row.minStock).length;
+  const inventoryValue = rows.reduce((sum, row) => sum + row.costPrice * row.quantity, 0);
+  const reservedCount = rows.reduce((sum, row) => sum + row.reservedQuantity, 0);
+
+  function resetPage() {
+    setPage(1);
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <div className="mx-auto grid max-w-7xl gap-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-emerald-700">Admin / Sản phẩm</p>
-            <h1 className="text-3xl font-semibold">Quản lý sản phẩm</h1>
-            <p className="mt-1 text-sm text-slate-600">CRUD sản phẩm, SKU, giá, tồn kho ban đầu, danh mục và trạng thái.</p>
-          </div>
-          <button className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white" onClick={() => setModal({ mode: "create" })}>Tạo sản phẩm</button>
-        </header>
+    <AdminPage>
+      <PageHeader
+        eyebrow="Admin / Kho và hàng hóa / Sản phẩm"
+        title="Quản lý sản phẩm"
+        description="Quản lý catalog, SKU, giá bán, trạng thái hiển thị và tồn kho ban đầu cho luồng bán hàng."
+        action={<Button onClick={() => setModal({ mode: "create" })}><Plus className="mr-2 size-4" />Tạo sản phẩm</Button>}
+      />
 
-        <section className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_220px_auto]">
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Tìm kiếm
-            <input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên, SKU, slug, danh mục" />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Danh mục
-            <select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
-              <option value="">Tất cả</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Trạng thái
-            <select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="">Tất cả</option>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}
-            </select>
-          </label>
-          <div className="flex items-end text-sm font-semibold text-slate-600">{filtered.length} dòng</div>
-        </section>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Tổng sản phẩm" value={rows.length} hint={`${activeCount} đang bán`} />
+        <StatCard label="Tồn thấp" value={lowStockCount} tone={lowStockCount ? "amber" : "emerald"} hint="Số lượng <= tồn tối thiểu" />
+        <StatCard label="Đang giữ hàng" value={reservedCount} tone={reservedCount ? "blue" : "slate"} hint="Reserved cho đơn chưa hoàn tất" />
+        <StatCard label="Giá trị tồn kho" value={money(inventoryValue)} tone="emerald" hint="Theo giá vốn hiện tại" />
+      </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
-              <thead className="bg-slate-100 text-slate-600">
-                <tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">SKU</th><th className="px-4 py-3">Danh mục</th><th className="px-4 py-3">Giá vốn</th><th className="px-4 py-3">Giá bán</th><th className="px-4 py-3">Tồn</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr>
-              </thead>
-              <tbody>
-                {filtered.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3"><strong>{row.name}</strong><p className="mt-1 text-xs text-slate-500">{row.shortDescription || row.slug}</p></td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{row.sku}</td>
-                    <td className="px-4 py-3">{row.categoryName || "-"}</td>
-                    <td className="px-4 py-3">{money(row.costPrice)}</td>
-                    <td className="px-4 py-3"><strong>{money(row.salePrice)}</strong>{row.promotionPrice ? <p className="text-xs text-emerald-700">KM {money(row.promotionPrice)}</p> : null}</td>
-                    <td className="px-4 py-3">{row.quantity}<p className="text-xs text-slate-500">Giữ: {row.reservedQuantity} · Min: {row.minStock}</p></td>
-                    <td className="px-4 py-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{viStatus(row.status)}</span></td>
-                    <td className="px-4 py-3"><div className="flex justify-end gap-2"><button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "edit", row })}>Sửa</button>{row.status !== "ARCHIVED" ? <form action="/api/admin/products/archive" method="post" onSubmit={(event) => { if (!confirm("Lưu trữ sản phẩm này?")) event.preventDefault(); }}><input type="hidden" name="sessionToken" value={sessionToken} /><input type="hidden" name="id" value={row.id} /><button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700">Lưu trữ</button></form> : null}</div></td>
-                  </tr>
-                ))}
-                {!filtered.length ? <tr><td className="px-4 py-10 text-center text-slate-500" colSpan={8}>Không có sản phẩm phù hợp.</td></tr> : null}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+      <FilterBar resultText={`${filtered.length} / ${rows.length} sản phẩm`}>
+        <SearchField value={query} onChange={(value) => { setQuery(value); resetPage(); }} placeholder="Tên, SKU, slug, danh mục" />
+        <SelectField label="Danh mục" value={categoryId} onChange={(value) => { setCategoryId(value); resetPage(); }}><option value="">Tất cả</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectField>
+        <SelectField label="Trạng thái" value={status} onChange={(value) => { setStatus(value); resetPage(); }}><option value="">Tất cả</option>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}</SelectField>
+        <SelectField label="Tồn kho" value={stockFilter} onChange={(value) => { setStockFilter(value); resetPage(); }}><option value="">Tất cả</option><option value="available">Còn bán được</option><option value="low">Tồn thấp</option><option value="out">Hết khả dụng</option></SelectField>
+      </FilterBar>
+
+      <DataPanel>
+        <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
+          <thead className="bg-slate-100 text-slate-600">
+            <tr>
+              <SortableTh label="Sản phẩm" active={sortKey === "name"} direction={sortDirection} onClick={() => toggleSort("name", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <SortableTh label="SKU" active={sortKey === "sku"} direction={sortDirection} onClick={() => toggleSort("sku", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <th className="px-4 py-3 font-semibold">Danh mục</th>
+              <th className="px-4 py-3 font-semibold">Giá vốn</th>
+              <SortableTh label="Giá bán" active={sortKey === "salePrice"} direction={sortDirection} onClick={() => toggleSort("salePrice", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <SortableTh label="Tồn" active={sortKey === "quantity"} direction={sortDirection} onClick={() => toggleSort("quantity", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <SortableTh label="Trạng thái" active={sortKey === "status"} direction={sortDirection} onClick={() => toggleSort("status", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => {
+              const available = row.quantity - row.reservedQuantity;
+              return (
+                <tr key={row.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                  <td className="px-4 py-3"><strong>{row.name}</strong><p className="mt-1 max-w-72 truncate text-xs text-slate-500">{row.shortDescription || row.slug}</p></td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{row.sku}</td>
+                  <td className="px-4 py-3">{row.categoryName || "-"}</td>
+                  <td className="px-4 py-3">{money(row.costPrice)}</td>
+                  <td className="px-4 py-3"><strong>{money(row.salePrice)}</strong>{row.promotionPrice ? <p className="text-xs font-semibold text-emerald-700">KM {money(row.promotionPrice)}</p> : null}</td>
+                  <td className="px-4 py-3"><StatusBadge tone={stockTone(row)}>{available} khả dụng</StatusBadge><p className="mt-1 text-xs text-slate-500">Tổng {row.quantity} · Giữ {row.reservedQuantity} · Min {row.minStock}</p></td>
+                  <td className="px-4 py-3"><StatusBadge tone={statusTone(row.status)}>{viStatus(row.status)}</StatusBadge></td>
+                  <td className="px-4 py-3"><div className="flex justify-end gap-2"><button className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold hover:bg-slate-50" onClick={() => setModal({ mode: "edit", row })}><Pencil className="size-4" />Sửa</button>{row.status !== "ARCHIVED" ? <ArchiveButton row={row} sessionToken={sessionToken} /> : null}</div></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!visibleRows.length ? <EmptyState title="Không có sản phẩm phù hợp" description="Thử đổi bộ lọc, từ khóa tìm kiếm hoặc tạo sản phẩm mới." /> : null}
+        <Pagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />
+      </DataPanel>
+
       {modal ? <ProductModal modal={modal} categories={categories} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
-    </main>
+    </AdminPage>
   );
 }
 
 function ProductModal({ modal, categories, sessionToken, onClose }: { modal: ModalState; categories: CategoryOption[]; sessionToken: string; onClose: () => void }) {
   const row = modal?.mode === "edit" ? modal.row : null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form action="/api/admin/products" method="post" className="grid max-h-[calc(100vh-32px)] w-full max-w-4xl gap-4 overflow-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
+      <form action="/api/admin/products" method="post" className="grid max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
         <input type="hidden" name="sessionToken" value={sessionToken} />
         <input type="hidden" name="mode" value={row ? "update" : "create"} />
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3"><h2 className="text-xl font-semibold">{row ? "Sửa sản phẩm" : "Tạo sản phẩm"}</h2><button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button></div>
         {row ? <input type="hidden" name="id" value={row.id} /> : null}
-        <div className="grid gap-3 md:grid-cols-2">
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Tên sản phẩm<input required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="name" defaultValue={row?.name || ""} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">SKU<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="sku" defaultValue={row?.sku || ""} placeholder="Tự tạo nếu bỏ trống" /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Slug<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="slug" defaultValue={row?.slug || ""} placeholder="Tự tạo nếu bỏ trống" /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Danh mục<select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="categoryId" defaultValue={row?.categoryId || ""}><option value="">Chưa chọn</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Giá vốn<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="costPrice" type="number" min="0" defaultValue={row?.costPrice || 0} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Giá bán<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="salePrice" type="number" min="0" defaultValue={row?.salePrice || 0} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Giá khuyến mãi<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="promotionPrice" type="number" min="0" defaultValue={row?.promotionPrice || ""} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Tồn kho ban đầu<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="stockQuantity" type="number" min="0" defaultValue={row?.quantity || 0} disabled={Boolean(row)} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Tồn tối thiểu<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="minStock" type="number" min="0" defaultValue={row?.minStock || 0} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700">Trạng thái<select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="status" defaultValue={row?.status || "DRAFT"}>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}</select></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Mô tả ngắn<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="shortDescription" defaultValue={row?.shortDescription || ""} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Ảnh thumbnail URL<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="thumbnail" defaultValue={row?.thumbnail || ""} /></label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Mô tả chi tiết<textarea className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="description" rows={4} defaultValue={row?.description || ""} /></label>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4"><h2 className="text-lg font-semibold">{row ? "Sửa sản phẩm" : "Tạo sản phẩm"}</h2><Button variant="outline" onClick={onClose}>Đóng</Button></div>
+        <div className="grid gap-4 overflow-y-auto p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Tên sản phẩm"><input required className={inputClass} name="name" defaultValue={row?.name || ""} /></Field>
+            <Field label="SKU"><input className={inputClass} name="sku" defaultValue={row?.sku || ""} placeholder="Tự tạo nếu bỏ trống" /></Field>
+            <Field label="Slug"><input className={inputClass} name="slug" defaultValue={row?.slug || ""} placeholder="Tự tạo nếu bỏ trống" /></Field>
+            <Field label="Danh mục"><select className={inputClass} name="categoryId" defaultValue={row?.categoryId || ""}><option value="">Chưa chọn</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field>
+            <Field label="Giá vốn"><input className={inputClass} name="costPrice" type="number" min="0" defaultValue={row?.costPrice || 0} /></Field>
+            <Field label="Giá bán"><input className={inputClass} name="salePrice" type="number" min="0" defaultValue={row?.salePrice || 0} /></Field>
+            <Field label="Giá khuyến mãi"><input className={inputClass} name="promotionPrice" type="number" min="0" defaultValue={row?.promotionPrice || ""} /></Field>
+            <Field label="Tồn kho ban đầu"><input className={inputClass} name="stockQuantity" type="number" min="0" defaultValue={row?.quantity || 0} disabled={Boolean(row)} /></Field>
+            <Field label="Tồn tối thiểu"><input className={inputClass} name="minStock" type="number" min="0" defaultValue={row?.minStock || 0} /></Field>
+            <Field label="Trạng thái"><select className={inputClass} name="status" defaultValue={row?.status || "DRAFT"}>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}</select></Field>
+            <Field label="Mô tả ngắn" wide><input className={inputClass} name="shortDescription" defaultValue={row?.shortDescription || ""} /></Field>
+            <Field label="Ảnh thumbnail URL" wide><input className={inputClass} name="thumbnail" defaultValue={row?.thumbnail || ""} /></Field>
+            <Field label="Mô tả chi tiết" wide><textarea className={textareaClass} name="description" rows={4} defaultValue={row?.description || ""} /></Field>
+          </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-3"><button type="button" className="rounded-lg border border-slate-300 px-4 py-2 font-semibold" onClick={onClose}>Huỷ</button><button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white">Lưu</button></div>
+        <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4"><Button variant="outline" onClick={onClose}>Huỷ</Button><Button type="submit">Lưu</Button></div>
       </form>
     </div>
   );
+}
+
+function ArchiveButton({ row, sessionToken }: { row: ProductRow; sessionToken: string }) {
+  return (
+    <form action="/api/admin/products/archive" method="post" onSubmit={(event) => { if (!confirm("Lưu trữ sản phẩm này?")) event.preventDefault(); }}>
+      <input type="hidden" name="sessionToken" value={sessionToken} />
+      <input type="hidden" name="id" value={row.id} />
+      <button className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 font-semibold text-red-700 hover:bg-red-50"><Trash2 className="size-4" />Lưu trữ</button>
+    </form>
+  );
+}
+
+function SortableTh({ label, active, direction, onClick }: { label: string; active: boolean; direction: "asc" | "desc"; onClick: () => void }) {
+  return <th className="px-4 py-3"><button className="inline-flex items-center gap-1 font-semibold" onClick={onClick}>{label}{active ? direction === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" /> : null}</button></th>;
+}
+
+function toggleSort(nextKey: SortKey, sortKey: SortKey, sortDirection: "asc" | "desc", setSortKey: (key: SortKey) => void, setSortDirection: (direction: "asc" | "desc") => void, resetPage: () => void) {
+  resetPage();
+  if (nextKey === sortKey) setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  else {
+    setSortKey(nextKey);
+    setSortDirection(nextKey === "updatedAt" ? "desc" : "asc");
+  }
+}
+
+function compareProducts(left: ProductRow, right: ProductRow, key: SortKey, direction: "asc" | "desc") {
+  const modifier = direction === "asc" ? 1 : -1;
+  if (key === "updatedAt") return (new Date(left.updatedAt).getTime() - new Date(right.updatedAt).getTime()) * modifier;
+  if (key === "salePrice" || key === "quantity") return (left[key] - right[key]) * modifier;
+  return String(left[key]).localeCompare(String(right[key]), "vi") * modifier;
+}
+
+function stockTone(row: ProductRow): Tone {
+  const available = row.quantity - row.reservedQuantity;
+  if (available <= 0) return "red";
+  if (row.quantity <= row.minStock) return "amber";
+  return "emerald";
+}
+
+function statusTone(status: string): Tone {
+  return ({ ACTIVE: "emerald", DRAFT: "amber", HIDDEN: "slate", ARCHIVED: "red" } as Record<string, Tone>)[status] || "slate";
 }
 
 function viStatus(status: string) {
