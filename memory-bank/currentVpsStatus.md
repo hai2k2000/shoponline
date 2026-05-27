@@ -207,3 +207,22 @@ Updated: 2026-05-27
 - Added CSV export buttons in the browser.
 - Build and Docker redeploy passed.
 - Browser reports smoke passed, including CSV button click.
+
+## 2026-05-27 Users/RBAC Update
+
+- Replaced `/admin/users` placeholder with a real user management module.
+- Added admin/manager guard for user management page and actions.
+- User module supports:
+  - Create user.
+  - Update name/email/role/status.
+  - Reset password.
+  - Archive user.
+- Prevented current user from archiving their own account through the UI/action.
+- User mutations write `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login as admin.
+  - Create a sales user.
+  - Reset password.
+  - Logout.
+  - Login as the new user.

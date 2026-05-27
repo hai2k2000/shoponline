@@ -118,3 +118,10 @@
 - Added sales, product sales, inventory, and debt report tables.
 - Added browser-side CSV export.
 - Added reports browser smoke test on VPS.
+
+## 2026-05-27 Users/RBAC
+
+- Implemented real `/admin/users` module.
+- Added admin/manager guard for user management.
+- Added create, update, reset password, and archive actions.
+- Added user browser smoke test on VPS.

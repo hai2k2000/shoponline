@@ -1,14 +1,27 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { UsersClient } from "./UsersClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function UsersPage() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) redirect("/admin/login");
+  if (!["ADMIN", "MANAGER"].includes(currentUser.role)) redirect("/admin/dashboard");
+  const rows = await prisma.user.findMany({ orderBy: [{ updatedAt: "desc" }] });
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Ng??i d?ng</h1>
-        <p className="text-slate-600">Qu?n l? user, role, tr?ng th?i v? reset m?t kh?u.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <UsersClient
+      currentUserId={currentUser.id}
+      rows={rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        role: row.role,
+        status: row.status,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
+      }))}
+    />
   );
 }
