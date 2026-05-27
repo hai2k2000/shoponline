@@ -1,0 +1,20 @@
+{
+  "name": "shoponline",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspace apps/web",
+    "start": "npm run start --workspace apps/web",
+    "lint": "npm run lint --workspace apps/web",
+    "prisma:generate": "npm run prisma:generate --workspace apps/web",
+    "prisma:migrate": "npm run prisma:migrate --workspace apps/web",
+    "prisma:dev": "npm run prisma:dev --workspace apps/web",
+    "prisma:seed": "npm run prisma:seed --workspace apps/web",
+    "deploy:preview": "docker compose up -d --build",
+    "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f"
+  }
+}

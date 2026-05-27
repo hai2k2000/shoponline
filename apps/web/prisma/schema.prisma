@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SALES
+  WAREHOUSE
+  ACCOUNTANT
+  MARKETING
+}
+
+enum RecordStatus {
+  ACTIVE
+  DRAFT
+  HIDDEN
+  ARCHIVED
+}
+
+enum InventoryTransactionType {
+  IMPORT
+  EXPORT
+  ADJUST
+  RETURN
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  PACKING
+  SHIPPING
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum DebtType {
+  CUSTOMER
+  SUPPLIER
+}
+
+enum DebtStatus {
+  OPEN
+  PARTIAL
+  PAID
+  OVERDUE
+  CLOSED
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         UserRole     @default(SALES)
+  status       RecordStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  activityLogs ActivityLog[]
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  parentId    String?
+  parent      Category?    @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryTree")
+  name        String
+  slug        String       @unique
+  description String?
+  sortOrder   Int          @default(0)
+  status      RecordStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id               String       @id @default(cuid())
+  categoryId       String?
+  category         Category?    @relation(fields: [categoryId], references: [id])
+  name             String
+  slug             String       @unique
+  sku              String       @unique
+  shortDescription String?
+  description      String?
+  costPrice        Decimal      @default(0)
+  salePrice        Decimal      @default(0)
+  promotionPrice   Decimal?
+  thumbnail        String?
+  status           RecordStatus @default(DRAFT)
+  minStock         Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  images           ProductImage[]
+  inventory        Inventory?
+  transactions     InventoryTransaction[]
+  orderItems       OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  sortOrder Int     @default(0)
+}
+
+model Inventory {
+  id               String   @id @default(cuid())
+  productId        String   @unique
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity         Int      @default(0)
+  reservedQuantity Int      @default(0)
+  updatedAt        DateTime @updatedAt
+}
+
+model InventoryTransaction {
+  id             String                   @id @default(cuid())
+  productId      String
+  product        Product                  @relation(fields: [productId], references: [id])
+  type           InventoryTransactionType
+  quantity       Int
+  beforeQuantity Int
+  afterQuantity  Int
+  note           String?
+  createdAt      DateTime                 @default(now())
+}
+
+model Supplier {
+  id       String  @id @default(cuid())
+  name     String
+  phone    String?
+  email    String?
+  address  String?
+  taxCode  String?
+  note     String?
+  debts    Debt[]
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  address     String?
+  source      String?
+  group       String?
+  notes       String?
+  totalOrders Int      @default(0)
+  totalSpent  Decimal  @default(0)
+  orders      Order[]
+  debts       Debt[]
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  orderCode     String        @unique
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  subtotal      Decimal       @default(0)
+  shippingFee   Decimal       @default(0)
+  discount      Decimal       @default(0)
+  total         Decimal       @default(0)
+  paymentStatus PaymentStatus @default(UNPAID)
+  orderStatus   OrderStatus   @default(NEW)
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  sku         String?
+  quantity    Int
+  costPrice   Decimal  @default(0)
+  salePrice   Decimal  @default(0)
+  total       Decimal  @default(0)
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  category  String
+  title     String
+  amount    Decimal  @default(0)
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Debt {
+  id         String     @id @default(cuid())
+  type       DebtType
+  amount     Decimal    @default(0)
+  paidAmount Decimal    @default(0)
+  status     DebtStatus @default(OPEN)
+  dueDate    DateTime?
+  customerId String?
+  customer   Customer?  @relation(fields: [customerId], references: [id])
+  supplierId String?
+  supplier   Supplier?  @relation(fields: [supplierId], references: [id])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  entityType  String
+  entityId    String?
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model StoreSetting {
+  id                String  @id @default("default")
+  storeName         String  @default("ShopOnline")
+  logo              String?
+  phone             String?
+  email             String?
+  address           String?
+  shippingFee       Decimal @default(0)
+  inventoryStrategy String  @default("PREVENT_NEGATIVE")
+}

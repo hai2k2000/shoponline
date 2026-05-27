@@ -1,0 +1,46 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: shoponline-web
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://shoponline:shoponline@postgres:5432/shoponline
+      REDIS_URL: redis://redis:6379
+    ports:
+      - 127.0.0.1:3002:3000
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: shoponline-postgres
+    environment:
+      POSTGRES_DB: shoponline
+      POSTGRES_USER: shoponline
+      POSTGRES_PASSWORD: shoponline
+    ports:
+      - 127.0.0.1:5434:5432
+    volumes:
+      - shoponline_postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: shoponline-redis
+    ports:
+      - 127.0.0.1:6381:6379
+    volumes:
+      - shoponline_redis:/data
+    restart: unless-stopped
+
+volumes:
+  shoponline_postgres:
+  shoponline_redis:
