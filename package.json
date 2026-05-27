@@ -15,10 +15,25 @@
     "prisma:dev": "npm run prisma:dev --workspace apps/web",
     "prisma:seed": "npm run prisma:seed --workspace apps/web",
     "deploy:preview": "docker compose up -d --build",
+    "deploy:prod": "./scripts/deploy-production.sh",
+    "check": "npm run lint && npm run build && npm run backup:verify && npm run smoke:regression",
+    "check:ci": "npm run lint && npm run build && npm run audit:high",
+    "audit:high": "npm audit --audit-level=high",
     "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
     "backup:postgres": "./scripts/backup-postgres.sh",
+    "backup:verify": "./scripts/verify-postgres-backup.sh",
     "restore:postgres": "./scripts/restore-postgres.sh",
     "automation:run": "tsx scripts/run-automation.ts",
-    "smoke:prod": "./scripts/smoke-production.sh"
+    "smoke:prod": "./scripts/smoke-production.sh",
+    "smoke:admin-core": "tsx scripts/smoke-admin-core.ts",
+    "smoke:admin-crm-finance": "tsx scripts/smoke-admin-crm-finance.ts",
+    "smoke:admin-catalog-system": "tsx scripts/smoke-admin-catalog-system.ts",
+    "smoke:admin-auth": "tsx scripts/smoke-admin-auth.ts",
+    "smoke:admin-negative": "tsx scripts/smoke-admin-negative.ts",
+    "smoke:admin": "npm run smoke:admin-core && npm run smoke:admin-crm-finance && npm run smoke:admin-catalog-system && npm run smoke:admin-auth && npm run smoke:admin-negative",
+    "smoke:checkout": "tsx scripts/smoke-checkout.ts",
+    "smoke:reporting": "tsx scripts/smoke-reporting.ts",
+    "smoke:tracking": "tsx scripts/smoke-tracking.ts",
+    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking"
   }
 }

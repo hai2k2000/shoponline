@@ -14,16 +14,55 @@ SmartTour uses `3001/4000/5433/6380`, so keep ShopOnline on the separate ports a
 
 ## Deploy
 
+## CI Checks
+
+GitHub Actions runs `npm run check:ci` on pull requests and pushes to `main`.
+
+`check:ci` performs:
+
+- `npm run lint`
+- `npm run build`
+- `npm run audit:high`
+
+The VPS-only `npm run check` remains stricter because it also verifies Postgres backups and runs the full smoke regression against the deployed service.
+
+Standard production deploy:
+
+```sh
+cd /opt/shoponline
+npm run deploy:prod
+```
+
+`deploy:prod` performs:
+
+- Postgres backup via `backup:postgres`.
+- Backup restore verification via `backup:verify`.
+- Next.js production build.
+- Docker rebuild/restart for `shoponline-web`.
+- Docker health wait for `shoponline-web`.
+- Full `npm run smoke:regression`.
+
+Optional environment switches:
+
+```sh
+SKIP_BACKUP=yes npm run deploy:prod
+SKIP_BACKUP_VERIFY=yes npm run deploy:prod
+SKIP_BUILD=yes npm run deploy:prod
+SKIP_REGRESSION=yes npm run deploy:prod
+```
+
+Manual deploy path:
+
 ```sh
 cd /opt/shoponline
 git pull
 npm run build
 docker compose build web
 docker compose up -d
-npm run smoke:prod
+npm run smoke:regression
 ```
 
-`smoke:prod` retries each endpoint by default, so it can be run immediately after a container restart.
+`smoke:prod` retries each public endpoint by default, so it can be run immediately after a container restart. `smoke:regression` also covers admin, checkout, reporting, and tracking flows.
 
 ## Health Check
 
@@ -52,6 +91,20 @@ npm run backup:postgres
 ```
 
 Default backup folder: `/opt/shoponline/backups/postgres`.
+
+Verify latest backup by restoring it into a temporary database and dropping it afterward:
+
+```sh
+cd /opt/shoponline
+npm run backup:verify
+```
+
+Verify a specific backup:
+
+```sh
+cd /opt/shoponline
+npm run backup:verify -- /opt/shoponline/backups/postgres/shoponline-YYYYMMDD-HHMMSS.sql.gz
+```
 
 Restore from backup:
 
