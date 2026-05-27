@@ -478,3 +478,12 @@
 - Reworked report tables with status badges, empty states, row counts, and one active CSV export action.
 - Deployed the updated reports UI to the VPS production container.
 - Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-27 Payments UI Flow Pass
+
+- Refactored `/admin/finance/payments` to use the shared admin UI primitives.
+- Added payment KPI cards for total transactions, collected amount, remaining receivables, and partial-payment orders.
+- Added search, payment method filter, sort selector, sortable table columns, pagination, method badges, and empty state.
+- Reworked the payment recording modal to match the new admin form shell and show an empty-order state when all orders are fully paid.
+- Deployed the updated payments UI to the VPS production container.
+- Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
