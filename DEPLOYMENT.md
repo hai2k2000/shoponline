@@ -2,6 +2,7 @@
 
 Repository: `git@github.com:hai2k2000/shoponline.git`
 VPS path: `/opt/shoponline`
+Public domain: `https://cargo.io.vn`
 
 ## Ports
 
@@ -147,8 +148,15 @@ server {
 After changing domain/proxy, run:
 
 ```sh
-BASE_URL=https://shop.example.com npm run smoke:prod
+BASE_URL=https://cargo.io.vn npm run smoke:prod
 ```
+
+Current Nginx mapping:
+
+- Config: `/etc/nginx/sites-available/cargo.io.vn.conf`
+- Enabled symlink: `/etc/nginx/sites-enabled/cargo.io.vn.conf`
+- Proxy target: `http://127.0.0.1:3002`
+- Previous config backup: `/etc/nginx/sites-available/cargo.io.vn.conf.backup.20260527-131838`
 
 ## Required Production Env
 

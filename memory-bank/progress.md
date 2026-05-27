@@ -178,3 +178,9 @@
 - Added `/admin/automation`.
 - Added automation cron and log rotation coverage.
 - Added automation browser smoke test on VPS.
+
+## 2026-05-27 Domain Switch
+
+- Pointed `cargo.io.vn` Nginx proxy to ShopOnline on `127.0.0.1:3002`.
+- Backed up old Nginx config.
+- Verified Nginx reload, domain health endpoint, and production smoke through `https://cargo.io.vn`.

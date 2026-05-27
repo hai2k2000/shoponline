@@ -344,3 +344,19 @@ Updated: 2026-05-27
   - Docker redeploy passes.
   - Production smoke passes.
   - `/admin/automation` browser smoke passes.
+
+## 2026-05-27 Domain Switch
+
+- Switched `https://cargo.io.vn` from the old cargo proxy target to ShopOnline.
+- Changed only `/etc/nginx/sites-available/cargo.io.vn.conf`.
+- Previous target was `http://127.0.0.1:3100`.
+- New target is `http://127.0.0.1:3002`.
+- Backup created:
+  - `/etc/nginx/sites-available/cargo.io.vn.conf.backup.20260527-131838`
+- Verified:
+  - `nginx -t` passes.
+  - Nginx reload succeeded.
+  - `https://cargo.io.vn` returns ShopOnline HTML.
+  - `https://cargo.io.vn/api/health` returns `ok: true`.
+  - `BASE_URL=https://cargo.io.vn npm run smoke:prod` passes.
+  - Diff confirms only the `proxy_pass` line changed.
