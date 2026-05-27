@@ -190,3 +190,11 @@
 - Added payment recording workflow at `/admin/finance/payments`.
 - Decoupled order completion from payment status.
 - Added and passed a VPS browser smoke for payment creation.
+
+## 2026-05-27 Shipments
+
+- Added `Shipment` model, `ShipmentStatus` enum, and migration.
+- Added `/admin/shipments` list-first workflow.
+- Added route handler POST flows for shipment creation and status updates.
+- Synced `SHIPPED` shipments to order `SHIPPING` status.
+- Added and passed a VPS browser smoke for shipment creation.

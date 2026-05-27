@@ -368,3 +368,12 @@ Updated: 2026-05-27
 - Payment records store amount, method, reference, note, receiver, and timestamp.
 - Order payment status now updates from actual payment totals instead of order completion.
 - Build, Docker redeploy, production smoke, and browser payment smoke passed.
+
+## 2026-05-27 Shipment Update
+
+- Added `Shipment` Prisma model, `ShipmentStatus` enum, and migration.
+- Linked shipments to `Order` and optional creating `User`.
+- Added `/admin/shipments` for carrier, service, tracking code, shipping fee, status, and delivery notes.
+- Added POST route handlers for creating shipments and updating shipment status.
+- Marking a shipment as `SHIPPED` syncs the order to `SHIPPING`; inventory completion remains in the order workflow.
+- Build, Docker redeploy, production smoke, and browser shipment smoke passed.

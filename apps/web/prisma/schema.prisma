@@ -47,6 +47,15 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum ShipmentStatus {
+  PENDING
+  PACKED
+  SHIPPED
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -71,6 +80,7 @@ model User {
   updatedAt    DateTime     @updatedAt
   activityLogs ActivityLog[]
   payments     PaymentTransaction[]
+  shipments    Shipment[]
 }
 
 model Category {
@@ -188,6 +198,7 @@ model Order {
   updatedAt     DateTime      @updatedAt
   items         OrderItem[]
   payments      PaymentTransaction[]
+  shipments     Shipment[]
 }
 
 model PaymentTransaction {
@@ -201,6 +212,24 @@ model PaymentTransaction {
   receivedById String?
   receivedBy   User?    @relation(fields: [receivedById], references: [id])
   createdAt    DateTime @default(now())
+}
+
+model Shipment {
+  id           String         @id @default(cuid())
+  orderId      String
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier      String
+  service      String?
+  trackingCode String?
+  shippingFee  Decimal        @default(0)
+  status       ShipmentStatus @default(PENDING)
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  note         String?
+  createdById  String?
+  createdBy    User?          @relation(fields: [createdById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model OrderItem {
