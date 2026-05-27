@@ -418,3 +418,9 @@ Updated: 2026-05-27
 - Checkout now accepts coupon codes, validates active dates, usage limits, minimum order, and calculates fixed or percent discounts.
 - Coupon usage increments after successful checkout.
 - Build, Docker redeploy, production smoke, and promotion checkout smoke passed.
+
+## 2026-05-27 Audit Log Update
+
+- Added `/admin/audit` to inspect existing `ActivityLog` records.
+- Audit page includes search, entity type filter, operational metrics, and the latest 500 activity entries.
+- Build, Docker redeploy, production smoke, and audit page smoke passed.

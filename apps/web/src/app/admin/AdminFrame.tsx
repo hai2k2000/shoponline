@@ -22,6 +22,7 @@ const links = [
   ["Chi phí", "/admin/finance/expenses"],
   ["Công nợ", "/admin/finance/debts"],
   ["Báo cáo", "/admin/reports"],
+  ["Nhật ký", "/admin/audit"],
   ["Thông báo", "/admin/notifications"],
   ["Automation", "/admin/automation"],
   ["Người dùng", "/admin/users"],

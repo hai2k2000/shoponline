@@ -237,3 +237,9 @@
 - Checkout now applies valid coupon codes and writes order discount.
 - Coupon usage count increments after checkout.
 - Added and passed a VPS promotion smoke for admin coupon creation and public checkout.
+
+## 2026-05-27 Audit Log
+
+- Added `/admin/audit` for browsing `ActivityLog`.
+- Added search, entity filter, metrics, and latest log table.
+- Added and passed a VPS audit page smoke.
