@@ -18,6 +18,7 @@
     "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
     "backup:postgres": "./scripts/backup-postgres.sh",
     "restore:postgres": "./scripts/restore-postgres.sh",
+    "automation:run": "tsx scripts/run-automation.ts",
     "smoke:prod": "./scripts/smoke-production.sh"
   }
 }

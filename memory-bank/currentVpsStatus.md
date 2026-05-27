@@ -321,3 +321,26 @@ Updated: 2026-05-27
   - Production smoke passes.
   - Headers are present.
   - Restore guard works.
+
+## 2026-05-27 Automation Foundation
+
+- Added `AutomationRun` Prisma model and migration.
+- Added `npm run automation:run`.
+- Added automation jobs:
+  - Low stock alert.
+  - Purchase suggestions.
+  - Debt reminders and overdue marking.
+  - New order follow-up after 24 hours.
+  - Daily operational report.
+- Added `/admin/automation` page to review latest automation runs and history.
+- Added Automation link to admin navigation.
+- Added active cron:
+  - `/etc/cron.d/shoponline-automation`
+- Added `/var/log/shoponline-automation.log` to ShopOnline logrotate config.
+- Verified:
+  - Migration applied.
+  - Automation command runs.
+  - Web build passes.
+  - Docker redeploy passes.
+  - Production smoke passes.
+  - `/admin/automation` browser smoke passes.

@@ -66,16 +66,38 @@ Active cron on the VPS:
 ```cron
 27 2 * * * root cd /opt/shoponline && /opt/shoponline/scripts/backup-postgres.sh >> /var/log/shoponline-postgres-backup.log 2>&1
 */5 * * * * root cd /opt/shoponline && /opt/shoponline/scripts/smoke-production.sh >> /var/log/shoponline-healthcheck.log 2>&1
+35 7 * * * root cd /opt/shoponline && /usr/bin/npm run automation:run >> /var/log/shoponline-automation.log 2>&1
 ```
 
 Cron files:
 
 - `/etc/cron.d/shoponline-postgres-backup`
 - `/etc/cron.d/shoponline-healthcheck`
+- `/etc/cron.d/shoponline-automation`
 
 Logs:
 
 - `/var/log/shoponline-postgres-backup.log`
+- `/var/log/shoponline-automation.log`
+
+## Automation
+
+Run manually:
+
+```sh
+cd /opt/shoponline
+npm run automation:run
+```
+
+Automation writes records to `AutomationRun`, visible in `/admin/automation`.
+
+Current jobs:
+
+- Low stock alert.
+- Purchase suggestions.
+- Debt reminders and overdue marking.
+- New order follow-up after 24 hours.
+- Daily operational report.
 - `/var/log/shoponline-healthcheck.log`
 
 ## Docker Cleanup Policy

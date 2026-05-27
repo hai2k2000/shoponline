@@ -169,3 +169,12 @@
 - Added baseline security headers.
 - Added guarded Postgres restore script.
 - Verified build, deploy, smoke, security headers, and restore guard.
+
+## 2026-05-27 Automation Foundation
+
+- Added `AutomationRun` model and migration.
+- Added automation script and npm command.
+- Added low stock, purchase suggestion, debt reminder, order follow-up, and daily report jobs.
+- Added `/admin/automation`.
+- Added automation cron and log rotation coverage.
+- Added automation browser smoke test on VPS.
