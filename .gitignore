@@ -7,3 +7,5 @@ build/
 *.log
 
 backups/
+.env.backup.*
+apps/web/.env.backup.*
