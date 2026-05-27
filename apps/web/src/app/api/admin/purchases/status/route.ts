@@ -38,6 +38,16 @@ export async function POST(request: NextRequest) {
         });
       }
       await tx.purchaseOrder.update({ where: { id }, data: { status: "RECEIVED", receivedAt: new Date() } });
+      await tx.notification.create({
+        data: {
+          userId: user.id,
+          level: "SUCCESS",
+          title: `Đã nhận hàng ${purchase.code}`,
+          message: `Đã nhập ${purchase.items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm vào kho.`,
+          entityType: "PurchaseOrder",
+          entityId: purchase.id,
+        },
+      });
     } else {
       await tx.purchaseOrder.update({ where: { id }, data: { status: "CANCELLED" } });
     }

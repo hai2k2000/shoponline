@@ -386,3 +386,11 @@ Updated: 2026-05-27
 - Added admin POST route handlers for purchase creation and status updates.
 - Fixed admin POST route redirects to respect forwarded HTTPS host.
 - Build, Docker redeploy, production smoke, shipment smoke, and purchase smoke passed.
+
+## 2026-05-27 Notification Update
+
+- Added `Notification` Prisma model, `NotificationLevel` enum, and migration.
+- Added `/admin/notifications` for unread/read system notifications.
+- Added read and read-all admin POST routes.
+- Purchase receiving now creates a success notification for the receiving admin.
+- Build, Docker redeploy, production smoke, purchase smoke, and notification smoke passed.

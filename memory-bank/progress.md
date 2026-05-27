@@ -207,3 +207,10 @@
 - Receiving a purchase order imports stock and logs inventory transactions.
 - Fixed route redirects behind Nginx proxy and added token fallback for admin POST routes.
 - Added and passed a VPS purchase smoke for create and receive.
+
+## 2026-05-27 Notifications
+
+- Added `Notification` model and `NotificationLevel` enum with migration.
+- Added `/admin/notifications` list and read/read-all workflows.
+- Purchase receiving now writes a success notification.
+- Added and passed a VPS notification smoke for marking a notification as read.

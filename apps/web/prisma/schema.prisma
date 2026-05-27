@@ -63,6 +63,13 @@ enum PurchaseOrderStatus {
   CANCELLED
 }
 
+enum NotificationLevel {
+  INFO
+  SUCCESS
+  WARNING
+  DANGER
+}
+
 enum DebtType {
   CUSTOMER
   SUPPLIER
@@ -88,6 +95,7 @@ model User {
   activityLogs ActivityLog[]
   payments     PaymentTransaction[]
   shipments    Shipment[]
+  notifications Notification[]
 }
 
 model Category {
@@ -321,6 +329,19 @@ model ActivityLog {
   entityId    String?
   description String?
   createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id         String            @id @default(cuid())
+  userId     String?
+  user       User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level      NotificationLevel @default(INFO)
+  title      String
+  message    String?
+  entityType String?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime          @default(now())
 }
 
 model AutomationRun {
