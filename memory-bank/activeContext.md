@@ -21,10 +21,10 @@ Continue backend completion and hardening for the deployed ShopOnline project on
 
 ## Immediate Next Steps
 
-1. Run/automate UAT checks for the main admin/public UI flows.
+1. Define smoke-data cleanup/retention or staging strategy for repeated regression runs.
 2. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
-3. Consider data cleanup/retention strategy for smoke-generated records if test data volume becomes an issue.
-4. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
+3. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
+4. Continue manual business UAT with real users on top of automated UAT page smoke.
 
 ## Open Questions
 

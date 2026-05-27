@@ -404,3 +404,9 @@
 - Committed and pushed the backend hardening batch to GitHub.
 - Fixed CI by adding Prisma client generation to `check:ci`.
 - Confirmed GitHub Actions CI passed on push to `main`.
+
+## 2026-05-27 Automated UAT Page Smoke
+
+- Added automated page-render UAT smoke for public pages and authenticated admin pages.
+- Included `smoke:uat-pages` in full regression.
+- Passed standalone UAT page smoke, full `npm run check`, and GitHub Actions CI after push.

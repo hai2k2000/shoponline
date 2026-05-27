@@ -657,3 +657,22 @@ Updated: 2026-05-27
 - Added `fd8a3e5 Generate Prisma client in CI checks`.
 - Pushed the CI fix.
 - GitHub Actions run `26514371356` passed.
+
+## 2026-05-27 Automated UAT Page Smoke
+
+- Added `scripts/smoke-uat-pages.ts`.
+- Added `npm run smoke:uat-pages`.
+- Added UAT page smoke to `npm run smoke:regression`.
+- UAT page smoke checks public pages and authenticated admin pages render HTTP 200 with expected page text.
+- Covered public pages:
+  - `/`
+  - `/products`
+  - `/cart`
+  - `/checkout`
+  - `/tracking`
+  - `/admin/login`
+- Covered main admin pages including dashboard, catalog, inventory, orders, customers, suppliers, finance, shipments, purchases, returns, promotions, reports, users, settings, audit, automation, and notifications.
+- `npm run smoke:uat-pages` passed.
+- `npm run check` passed with UAT page smoke included in regression.
+- Commit `f562756 Add UAT page smoke coverage` was pushed to GitHub.
+- GitHub Actions run `26514678184` passed.
