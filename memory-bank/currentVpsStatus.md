@@ -64,3 +64,19 @@ Updated: 2026-05-27
   - Search category.
   - Archive category.
   - Verify archived status.
+
+## 2026-05-27 Products CRUD Update
+
+- Replaced `/admin/products` placeholder with a real Prisma-backed CRUD screen.
+- Added list-first product management with search, category filter, status filter, create/edit modal, and archive action.
+- Product create supports category, SKU, slug, prices, status, thumbnail URL, descriptions, min stock, and initial stock.
+- Initial stock creates `Inventory` and an `InventoryTransaction`.
+- Product mutations write `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create product.
+  - Search product by SKU.
+  - Edit product.
+  - Archive product.
+  - Verify archived status.

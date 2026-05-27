@@ -55,3 +55,10 @@
 - Added server actions for create, update, and archive.
 - Added list-first UI with modal create/edit.
 - Added category CRUD browser smoke test on VPS.
+
+## 2026-05-27 Products CRUD
+
+- Implemented real `/admin/products` module.
+- Added server actions for create, update, and archive.
+- Added inventory initialization on product create.
+- Added product CRUD browser smoke test on VPS.
