@@ -188,3 +188,22 @@ Updated: 2026-05-27
 - Added recent order table and quick navigation.
 - Build and Docker redeploy passed.
 - Browser dashboard smoke passed.
+
+## 2026-05-27 Reports Update
+
+- Replaced `/admin/reports` placeholder with a real report page.
+- Added report summary metrics:
+  - Revenue.
+  - Expenses.
+  - Estimated profit.
+  - Inventory value.
+  - Order counts.
+  - Receivables and payables.
+- Added report tables:
+  - Sales report.
+  - Product sales report.
+  - Inventory report.
+  - Debt report.
+- Added CSV export buttons in the browser.
+- Build and Docker redeploy passed.
+- Browser reports smoke passed, including CSV button click.

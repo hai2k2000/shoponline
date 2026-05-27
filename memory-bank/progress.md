@@ -110,3 +110,11 @@
 - Added real metrics for revenue, profit, orders, receivables, payables, expenses, stock, and master data counts.
 - Added recent orders and quick navigation.
 - Added dashboard browser smoke test on VPS.
+
+## 2026-05-27 Reports
+
+- Implemented real `/admin/reports` module.
+- Added summary metrics for revenue, expenses, profit, inventory, orders, receivables, and payables.
+- Added sales, product sales, inventory, and debt report tables.
+- Added browser-side CSV export.
+- Added reports browser smoke test on VPS.
