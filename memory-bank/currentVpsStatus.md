@@ -226,3 +226,18 @@ Updated: 2026-05-27
   - Reset password.
   - Logout.
   - Login as the new user.
+
+## 2026-05-27 Settings Update
+
+- Replaced `/admin/settings` placeholder with a real store settings module.
+- Settings supports:
+  - Store name.
+  - Logo URL.
+  - Phone.
+  - Email.
+  - Address.
+  - Default shipping fee.
+  - Inventory strategy.
+- Settings mutation writes `ActivityLog`.
+- Build and Docker redeploy passed.
+- Browser settings smoke passed.

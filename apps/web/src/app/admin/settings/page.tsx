@@ -1,14 +1,25 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { SettingsClient } from "./SettingsClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function SettingsPage() {
+  const setting = await prisma.storeSetting.upsert({
+    where: { id: "default" },
+    create: { id: "default", storeName: "ShopOnline" },
+    update: {},
+  });
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">C?i ??t c?a h?ng</h1>
-        <p className="text-slate-600">Th?ng tin c?a h?ng, ph? ship, chi?n l??c t?n kho v? thanh to?n.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <SettingsClient
+      setting={{
+        storeName: setting.storeName,
+        logo: setting.logo,
+        phone: setting.phone,
+        email: setting.email,
+        address: setting.address,
+        shippingFee: Number(setting.shippingFee),
+        inventoryStrategy: setting.inventoryStrategy,
+      }}
+    />
   );
 }

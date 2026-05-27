@@ -125,3 +125,9 @@
 - Added admin/manager guard for user management.
 - Added create, update, reset password, and archive actions.
 - Added user browser smoke test on VPS.
+
+## 2026-05-27 Settings
+
+- Implemented real `/admin/settings` module.
+- Added update action for store name, logo, contact, shipping fee, and inventory strategy.
+- Added settings browser smoke test on VPS.
