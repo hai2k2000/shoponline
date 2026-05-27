@@ -114,3 +114,20 @@ Updated: 2026-05-27
   - Edit customer.
   - Archive customer.
   - Verify archived status in the table.
+
+## 2026-05-27 Suppliers CRUD Update
+
+- Added `/admin/suppliers` as a real Prisma-backed supplier module.
+- Added `Supplier.status`, `Supplier.createdAt`, and `Supplier.updatedAt` migration.
+- Added list-first supplier management with search, status filter, detail modal, create/edit modal, and archive action.
+- Supplier mutations write `ActivityLog`.
+- Dashboard now links to supplier management.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create supplier.
+  - Search supplier by tax code.
+  - View detail.
+  - Edit supplier.
+  - Archive supplier.
+  - Verify archived status in the table.

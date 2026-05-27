@@ -11,6 +11,7 @@ const adminLinks = [
   ["Kho", "/admin/inventory"],
   ["??n h?ng", "/admin/orders"],
   ["Kh?ch h?ng", "/admin/customers"],
+  ["Nhà cung cấp", "/admin/suppliers"],
   ["Chi ph?", "/admin/finance/expenses"],
   ["C?ng n?", "/admin/finance/debts"],
   ["B?o c?o", "/admin/reports"],

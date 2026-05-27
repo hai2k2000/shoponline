@@ -77,3 +77,11 @@
 - Added server actions for create, update, and archive.
 - Added list-first UI with filters, detail modal, and create/edit modal.
 - Added customer CRUD browser smoke test on VPS.
+
+## 2026-05-27 Suppliers CRUD
+
+- Implemented real `/admin/suppliers` module.
+- Added supplier status and timestamp migration.
+- Added server actions for create, update, and archive.
+- Added list-first UI with status filter, detail modal, and create/edit modal.
+- Added supplier CRUD browser smoke test on VPS.
