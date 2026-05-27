@@ -51,10 +51,11 @@
 - Verified `npm run check` still passes after adding cleanup tooling.
 - Ran cleanup again after regression so the production DB dry-run returns zero matched smoke records.
 
-## 2026-05-27 CI Node 24 Opt-In
+## 2026-05-27 CI Actions Runtime Update
 
 - GitHub Actions reported the upcoming Node.js 20 actions runtime deprecation.
-- Opted the CI workflow into Node 24 JavaScript actions with `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
+- Checked current action releases through GitHub API.
+- Updated CI to `actions/checkout@v6` and `actions/setup-node@v6`.
 - Kept the project runtime check on Node 22 via `actions/setup-node`.
 
 
