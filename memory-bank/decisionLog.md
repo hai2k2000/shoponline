@@ -18,6 +18,6 @@
   6. Automation.
   7. AI.
 - UI should be modern SaaS with reusable components.
-- Admin screens should be list-first where possible.
+- Admin screens related to tables/lists must be list-first: focus on the table/list, and open create forms from the `Create` / `Tạo mới` button in a popup/modal.
 - Reports and dashboard must use real database values.
 

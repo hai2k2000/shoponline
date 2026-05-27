@@ -13,7 +13,7 @@ Continue UI/UX implementation for the deployed ShopOnline project on VPS while p
   - API `4001`
   - Postgres `5434`
   - Redis `6381`
-- Use list-first admin UI patterns where forms and lists would otherwise create unbalanced layouts.
+- All admin screens related to tables/lists must be list-first: the table is the main workspace and the primary `Create` / `Tạo mới` action opens a popup/modal form instead of showing a large form permanently on the page.
 - Core data and reports must be real database values.
 - Admin mutation flows should use `/api/admin/*` route handlers plus service-layer functions instead of Server Action mutations.
 - Admin POST routes should use shared auth/RBAC helpers, Zod form parsing, and typed redirect error handling.

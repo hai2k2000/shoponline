@@ -92,7 +92,12 @@ Follow the SaaS design direction from `UI_UX_REQUIREMENTS.md`:
 - Forms must support validation, loading, error state, success state, cancel, save, required indicators, and double-submit prevention.
 - Delete/destructive actions require confirm dialog.
 
-Avoid page layouts where a large form sits beside a large list by default. Prefer list-first screens with `Create`, `Edit`, and `Detail` in modal/drawer pages when it improves balance.
+All admin screens related to tables/lists must focus on the list as the main workspace:
+
+- The table/list is the primary content, with search, filter, sort, pagination, empty state, and row actions.
+- The primary `Create` / `Tạo mới` button opens a popup/modal form for creation.
+- Do not place a large create/edit form permanently above, beside, or mixed into the table view.
+- Edit/detail should use modal or drawer by default; use a dedicated detail page only when the workflow is too complex for a popup.
 
 ## Screen Flow Rules
 

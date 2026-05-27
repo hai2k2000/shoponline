@@ -15,11 +15,14 @@ Admin pages should use:
 - Success notification.
 - Confirm dialog for delete/destructive actions.
 
-For dense modules, use:
+For every admin module centered on a table/list, use:
 
-- List-first screen.
-- Create/edit in modal or drawer.
-- Detail in modal, drawer, or dedicated detail page depending on complexity.
+- List-first screen where the table/list is the main workspace.
+- Search, filter, sort, pagination, empty state, and row actions around the table.
+- A primary `Create` / `Tạo mới` button that opens a popup/modal form.
+- Create/edit forms in modal or drawer by default.
+- Detail in modal, drawer, or a dedicated detail page only when complexity requires it.
+- No permanently visible large create/edit form above, beside, or mixed into the table view.
 
 ## Data Pattern
 
