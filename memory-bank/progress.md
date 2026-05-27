@@ -149,3 +149,9 @@
 - Added `smoke:prod` script.
 - Added `backup:postgres` script.
 - Updated deployment documentation with reverse proxy, backup, smoke, and Docker cleanup guidance.
+
+## 2026-05-27 VPS Production Config
+
+- Rotated real VPS `AUTH_SECRET`.
+- Added active cron jobs for Postgres backup and healthcheck.
+- Verified healthcheck and backup commands manually.

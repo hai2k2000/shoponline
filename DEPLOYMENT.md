@@ -41,11 +41,22 @@ npm run backup:postgres
 
 Default backup folder: `/opt/shoponline/backups/postgres`.
 
-Suggested cron:
+Active cron on the VPS:
 
 ```cron
-15 2 * * * cd /opt/shoponline && /usr/bin/npm run backup:postgres >/var/log/shoponline-backup.log 2>&1
+27 2 * * * root cd /opt/shoponline && /opt/shoponline/scripts/backup-postgres.sh >> /var/log/shoponline-postgres-backup.log 2>&1
+*/5 * * * * root cd /opt/shoponline && /opt/shoponline/scripts/smoke-production.sh >> /var/log/shoponline-healthcheck.log 2>&1
 ```
+
+Cron files:
+
+- `/etc/cron.d/shoponline-postgres-backup`
+- `/etc/cron.d/shoponline-healthcheck`
+
+Logs:
+
+- `/var/log/shoponline-postgres-backup.log`
+- `/var/log/shoponline-healthcheck.log`
 
 ## Docker Cleanup Policy
 
@@ -85,6 +96,8 @@ BASE_URL=https://shop.example.com npm run smoke:prod
 ## Required Production Env
 
 Set a strong `AUTH_SECRET` in `/opt/shoponline/.env`. Do not keep `change-this-before-production`.
+
+The VPS `.env` has already been rotated to a generated strong secret. The old env files were copied to timestamped `.env.backup.*` files before rotation.
 
 Current admin seed defaults are only for initial setup:
 

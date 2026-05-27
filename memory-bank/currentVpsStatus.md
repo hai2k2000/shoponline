@@ -273,3 +273,15 @@ Updated: 2026-05-27
   - Docker redeploy passed.
   - Production smoke passed.
   - Manual Postgres backup produced a `.sql.gz` file.
+
+## 2026-05-27 VPS Production Config Update
+
+- Rotated `/opt/shoponline/.env` and `/opt/shoponline/apps/web/.env` `AUTH_SECRET` to a generated strong secret.
+- Backed up old env files to timestamped `.env.backup.*` files.
+- Restarted `shoponline-web` and verified production smoke passes after secret rotation.
+- Added active cron jobs:
+  - `/etc/cron.d/shoponline-postgres-backup`
+  - `/etc/cron.d/shoponline-healthcheck`
+- Verified cron commands manually:
+  - Healthcheck logs pass.
+  - Postgres backup created a `.sql.gz` file.
