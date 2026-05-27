@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
-import { adjustStockAction, exportStockAction, importStockAction } from "./actions";
 
 type InventoryRow = {
   productId: string;
@@ -31,7 +30,7 @@ type TransactionRow = {
 
 type ModalState = { mode: "import" | "export" | "adjust"; row?: InventoryRow } | null;
 
-export function InventoryClient({ rows, transactions }: { rows: InventoryRow[]; transactions: TransactionRow[] }) {
+export function InventoryClient({ rows, transactions, sessionToken }: { rows: InventoryRow[]; transactions: TransactionRow[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [stockFilter, setStockFilter] = useState("");
   const [modal, setModal] = useState<ModalState>(null);
@@ -119,17 +118,18 @@ export function InventoryClient({ rows, transactions }: { rows: InventoryRow[]; 
           <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Loại</th><th className="px-4 py-3">SL</th><th className="px-4 py-3">Trước</th><th className="px-4 py-3">Sau</th><th className="px-4 py-3">Ghi chú</th></tr></thead><tbody>{transactions.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="px-4 py-3">{new Date(item.createdAt).toLocaleString("vi-VN")}</td><td className="px-4 py-3"><strong>{item.productName}</strong><p className="font-mono text-xs text-slate-500">{item.sku}</p></td><td className="px-4 py-3">{viType(item.type)}</td><td className="px-4 py-3">{item.quantity}</td><td className="px-4 py-3">{item.beforeQuantity}</td><td className="px-4 py-3">{item.afterQuantity}</td><td className="px-4 py-3">{item.note || "-"}</td></tr>)}</tbody></table></div>
         </section>
       </div>
-      {modal ? <InventoryModal modal={modal} products={rows} onClose={() => setModal(null)} /> : null}
+      {modal ? <InventoryModal modal={modal} products={rows} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
     </main>
   );
 }
 
-function InventoryModal({ modal, products, onClose }: { modal: NonNullable<ModalState>; products: InventoryRow[]; onClose: () => void }) {
-  const action = modal.mode === "import" ? importStockAction : modal.mode === "export" ? exportStockAction : adjustStockAction;
+function InventoryModal({ modal, products, sessionToken, onClose }: { modal: NonNullable<ModalState>; products: InventoryRow[]; sessionToken: string; onClose: () => void }) {
   const title = modal.mode === "import" ? "Nhập kho" : modal.mode === "export" ? "Xuất kho" : "Điều chỉnh tồn";
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form action={action} className="grid w-full max-w-xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+      <form action="/api/admin/inventory" method="post" className="grid w-full max-w-xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
+        <input type="hidden" name="mode" value={modal.mode} />
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3"><h2 className="text-xl font-semibold">{title}</h2><button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button></div>
         <label className="grid gap-1 text-sm font-semibold text-slate-700">Sản phẩm<select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="productId" defaultValue={modal.row?.productId || ""} required><option value="">Chọn sản phẩm</option>{products.map((item) => <option key={item.productId} value={item.productId}>{item.sku} - {item.name}</option>)}</select></label>
         {modal.mode === "adjust" ? <label className="grid gap-1 text-sm font-semibold text-slate-700">Tồn thực tế<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="actualQuantity" type="number" min="0" defaultValue={modal.row?.quantity || 0} required /></label> : <label className="grid gap-1 text-sm font-semibold text-slate-700">Số lượng<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="quantity" type="number" min="1" defaultValue={1} required /></label>}

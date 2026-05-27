@@ -1,9 +1,13 @@
-﻿import { prisma } from "@/lib/prisma";
+﻿import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { SESSION_COOKIE } from "@/lib/session";
 import { InventoryClient } from "./InventoryClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [products, transactions] = await Promise.all([
     prisma.product.findMany({
       where: { status: { not: "ARCHIVED" } },
@@ -19,6 +23,7 @@ export default async function InventoryPage() {
 
   return (
     <InventoryClient
+      sessionToken={sessionToken}
       rows={products.map((row) => ({
         productId: row.id,
         name: row.name,

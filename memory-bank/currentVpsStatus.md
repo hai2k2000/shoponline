@@ -434,3 +434,6 @@ Updated: 2026-05-27
 - Converted admin order creation and order status transitions to `/api/admin/orders` and `/api/admin/orders/status` POST routes.
 - Order POST routes use the same cookie/session-token fallback and production-host redirects.
 - Admin order creation and status transition smoke passed.
+- Converted inventory import/export/adjust to `/api/admin/inventory` POST route.
+- Inventory route validates archived products, available stock for export, and reserved stock constraints for adjustment.
+- Inventory import smoke passed with stock increase and `IMPORT` transaction verification.

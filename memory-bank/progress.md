@@ -251,3 +251,5 @@
 - Re-tested payment creation through the production UI.
 - Converted admin order creation and status changes to route handlers.
 - Added and passed an admin order hardening smoke for create plus status update.
+- Converted inventory import/export/adjust to a route handler.
+- Added and passed an inventory hardening smoke for import and transaction logging.
