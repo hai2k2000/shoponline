@@ -22,6 +22,8 @@ docker compose up -d
 npm run smoke:prod
 ```
 
+`smoke:prod` retries each endpoint by default, so it can be run immediately after a container restart.
+
 ## Health Check
 
 ```sh
@@ -67,6 +69,21 @@ npm run docker:clean
 ```
 
 Do not run `docker system prune --volumes`; it can remove database volumes.
+
+## Container Health
+
+`compose.yaml` defines Docker healthchecks for:
+
+- `shoponline-web`: checks `/api/health`
+- `shoponline-postgres`: checks `pg_isready`
+- `shoponline-redis`: checks `redis-cli ping`
+
+Inspect status:
+
+```sh
+docker ps --filter name=shoponline
+docker inspect --format='{{json .State.Health}}' shoponline-web
+```
 
 ## Reverse Proxy Example
 

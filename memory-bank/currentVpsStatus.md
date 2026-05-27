@@ -285,3 +285,20 @@ Updated: 2026-05-27
 - Verified cron commands manually:
   - Healthcheck logs pass.
   - Postgres backup created a `.sql.gz` file.
+
+## 2026-05-27 Container Health And Log Rotation
+
+- Added Docker healthchecks in `compose.yaml`:
+  - `shoponline-web` checks `/api/health`.
+  - `shoponline-postgres` checks `pg_isready`.
+  - `shoponline-redis` checks `redis-cli ping`.
+- Improved `scripts/smoke-production.sh` with retry/wait behavior for post-restart checks.
+- Added `/etc/logrotate.d/shoponline` for:
+  - `/var/log/shoponline-healthcheck.log`
+  - `/var/log/shoponline-postgres-backup.log`
+- Verified:
+  - `docker compose config` passes.
+  - Web build passes.
+  - Docker redeploy passes.
+  - Production smoke passes.
+  - All ShopOnline containers report `healthy`.

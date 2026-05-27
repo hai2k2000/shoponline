@@ -155,3 +155,10 @@
 - Rotated real VPS `AUTH_SECRET`.
 - Added active cron jobs for Postgres backup and healthcheck.
 - Verified healthcheck and backup commands manually.
+
+## 2026-05-27 Container Health And Log Rotation
+
+- Added Docker healthchecks for web, Postgres, and Redis.
+- Added retry behavior to production smoke script.
+- Added logrotate config for ShopOnline cron logs.
+- Verified all ShopOnline containers report healthy.
