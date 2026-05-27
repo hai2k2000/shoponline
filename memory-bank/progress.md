@@ -270,3 +270,11 @@
 - Added cookie auth plus `sessionToken` fallback for these POST flows.
 - Added and passed `/tmp/shoponline-products-categories-smoke.js` for create, update, and archive on both modules.
 - Rebuilt, redeployed, and passed `npm run smoke:prod` on VPS.
+
+## 2026-05-27 Finance Hardening
+
+- Converted expense create/update/archive flows from Server Action submissions to admin route handlers.
+- Converted debt create/update/payment/close flows from Server Action submissions to admin route handlers.
+- Added cookie auth plus `sessionToken` fallback for these POST flows.
+- Added and passed `/tmp/shoponline-finance-hardening-smoke.js` for expense and debt workflows.
+- Rebuilt, redeployed, and passed `npm run smoke:prod` on VPS.

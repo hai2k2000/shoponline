@@ -461,3 +461,15 @@ Updated: 2026-05-27
 - Product create still initializes inventory and writes an initial `IMPORT` transaction when stock is provided.
 - Added `/tmp/shoponline-products-categories-smoke.js`.
 - Build, Docker redeploy, products/categories smoke, and `npm run smoke:prod` passed.
+
+## 2026-05-27 Finance Hardening Update
+
+- Converted expense create/update to `/api/admin/expenses`.
+- Converted expense archive to `/api/admin/expenses/archive`.
+- Converted debt create/update to `/api/admin/debts`.
+- Converted debt payment recording to `/api/admin/debts/payment`.
+- Converted debt close to `/api/admin/debts/close`.
+- Expense/debt pages now pass `SESSION_COOKIE` token into client forms.
+- Route handlers use cookie auth first, then `sessionToken` fallback for proxied/admin POST flows.
+- Added `/tmp/shoponline-finance-hardening-smoke.js`.
+- Build, Docker redeploy, finance smoke, and `npm run smoke:prod` passed.
