@@ -429,3 +429,12 @@
 - Added automated page-render UAT smoke for public pages and authenticated admin pages.
 - Included `smoke:uat-pages` in full regression.
 - Passed standalone UAT page smoke, full `npm run check`, and GitHub Actions CI after push.
+
+## 2026-05-27 Admin UI Foundation Pass
+
+- Started UI work after backend hardening reached a stable checkpoint.
+- Added shared admin UI primitives in `apps/web/src/components/admin/ui.tsx` for page shells, headers, buttons, KPI cards, filters, badges, modals, empty states, and pagination.
+- Reworked `AdminFrame` into grouped business navigation with lucide icons and clearer desktop/mobile behavior.
+- Refactored `/admin/orders` to follow the screen flow more closely: breadcrumb, KPI cards, search, status/payment filters, sortable columns, pagination, empty state, status badges, and cleaner create/detail modal layout.
+- Deployed the updated UI to the VPS production container.
+- Verified lint, build, production deploy, full regression smoke, UAT page smoke, container health, and post-regression smoke cleanup.

@@ -2,7 +2,7 @@
 
 ## Current Task
 
-Continue backend completion and hardening for the deployed ShopOnline project on VPS.
+Continue UI/UX implementation for the deployed ShopOnline project on VPS while preserving backend regression discipline.
 
 ## Latest Decisions
 
@@ -19,13 +19,14 @@ Continue backend completion and hardening for the deployed ShopOnline project on
 - Admin POST routes should use shared auth/RBAC helpers, Zod form parsing, and typed redirect error handling.
 - `npm run smoke:regression` is the standard backend verification command after backend changes.
 - `npm run smoke:cleanup` is the standard cleanup command for accumulated smoke/UAT data. It runs as a dry-run by default; set `CONFIRM_SMOKE_CLEANUP=yes` to delete smoke records and archive smoke test users.
+- UI work has started with shared admin primitives, grouped admin navigation, and the `/admin/orders` flow polish.
 
 ## Immediate Next Steps
 
-1. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
-2. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
-3. Continue manual business UAT with real users on top of automated UAT page smoke.
-4. Consider adding scheduled smoke cleanup after nightly/weekly regression runs if automated regression becomes cron-driven.
+1. Continue UI polish module-by-module following screen flow, next best targets: Products, Inventory, Customers, Reports.
+2. Review dependency audit status when a safe Next.js release is available for the pinned PostCSS advisory.
+3. Add deeper CI services/integration jobs later if GitHub runner secrets/services are approved.
+4. Continue manual business UAT with real users on top of automated UAT page smoke.
 
 ## Open Questions
 
