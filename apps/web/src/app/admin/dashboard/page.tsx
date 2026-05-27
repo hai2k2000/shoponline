@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getDashboardData } from "@/server/services/reporting-service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,31 +24,7 @@ export default async function AdminDashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
-
-  const [productCount, categoryCount, customerCount, supplierCount, orderCount, todayOrders, monthOrders, completedRevenue, monthExpenses, debts, lowStock, recentOrders] = await Promise.all([
-    prisma.product.count({ where: { status: { not: "ARCHIVED" } } }),
-    prisma.category.count({ where: { status: { not: "ARCHIVED" } } }),
-    prisma.customer.count({ where: { status: { not: "ARCHIVED" } } }),
-    prisma.supplier.count({ where: { status: { not: "ARCHIVED" } } }),
-    prisma.order.count(),
-    prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
-    prisma.order.count({ where: { createdAt: { gte: startOfMonth } } }),
-    prisma.order.aggregate({ where: { orderStatus: "COMPLETED" }, _sum: { total: true } }),
-    prisma.expense.aggregate({ where: { status: "ACTIVE", createdAt: { gte: startOfMonth } }, _sum: { amount: true } }),
-    prisma.debt.findMany({ where: { status: { in: ["OPEN", "PARTIAL", "OVERDUE"] } }, select: { type: true, amount: true, paidAmount: true } }),
-    prisma.inventory.findMany({ where: { product: { status: { not: "ARCHIVED" } } }, include: { product: { select: { name: true, sku: true, minStock: true } } } }),
-    prisma.order.findMany({ orderBy: { updatedAt: "desc" }, take: 6, include: { customer: { select: { name: true } }, items: { select: { productName: true, quantity: true } } } }),
-  ]);
-
-  const receivable = debts.filter((debt) => debt.type === "CUSTOMER").reduce((sum, debt) => sum + Number(debt.amount) - Number(debt.paidAmount), 0);
-  const payable = debts.filter((debt) => debt.type === "SUPPLIER").reduce((sum, debt) => sum + Number(debt.amount) - Number(debt.paidAmount), 0);
-  const lowStockRows = lowStock.filter((row) => row.quantity - row.reservedQuantity <= row.product.minStock);
-  const revenue = Number(completedRevenue._sum.total || 0);
-  const expenses = Number(monthExpenses._sum.amount || 0);
-  const estimatedProfit = revenue - expenses;
+  const { metrics, recentOrders } = await getDashboardData(prisma);
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
@@ -65,14 +42,14 @@ export default async function AdminDashboardPage() {
         </header>
 
         <section className="grid gap-4 md:grid-cols-4">
-          <Metric label="Doanh thu hoàn tất" value={money(revenue)} tone="emerald" />
-          <Metric label="Lợi nhuận ước tính" value={money(estimatedProfit)} tone={estimatedProfit >= 0 ? "emerald" : "red"} />
-          <Metric label="Đơn hôm nay" value={todayOrders} />
-          <Metric label="Đơn trong tháng" value={monthOrders} />
-          <Metric label="Phải thu" value={money(receivable)} />
-          <Metric label="Phải trả" value={money(payable)} />
-          <Metric label="Tồn thấp" value={lowStockRows.length} tone={lowStockRows.length ? "amber" : "emerald"} />
-          <Metric label="Chi phí tháng" value={money(expenses)} />
+          <Metric label="Doanh thu hoàn tất" value={money(metrics.revenue)} tone="emerald" />
+          <Metric label="Lợi nhuận ước tính" value={money(metrics.estimatedProfit)} tone={metrics.estimatedProfit >= 0 ? "emerald" : "red"} />
+          <Metric label="Đơn hôm nay" value={metrics.todayOrders} />
+          <Metric label="Đơn trong tháng" value={metrics.monthOrders} />
+          <Metric label="Phải thu" value={money(metrics.receivable)} />
+          <Metric label="Phải trả" value={money(metrics.payable)} />
+          <Metric label="Tồn thấp" value={metrics.lowStockCount} tone={metrics.lowStockCount ? "amber" : "emerald"} />
+          <Metric label="Chi phí tháng" value={money(metrics.expenses)} />
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -84,7 +61,7 @@ export default async function AdminDashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Mã đơn</th><th className="px-4 py-3">Khách</th><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Tổng</th><th className="px-4 py-3">Trạng thái</th></tr></thead>
-                <tbody>{recentOrders.map((order) => <tr key={order.id} className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">{order.orderCode}</td><td className="px-4 py-3">{order.customer?.name || "Khách lẻ"}</td><td className="px-4 py-3">{order.items.map((item) => `${item.productName} x${item.quantity}`).join(", ")}</td><td className="px-4 py-3">{money(Number(order.total))}</td><td className="px-4 py-3">{viOrderStatus(order.orderStatus)}</td></tr>)}</tbody>
+                <tbody>{recentOrders.map((order) => <tr key={order.id} className="border-t border-slate-100"><td className="px-4 py-3 font-semibold">{order.orderCode}</td><td className="px-4 py-3">{order.customerName}</td><td className="px-4 py-3">{order.items.map((item) => `${item.productName} x${item.quantity}`).join(", ")}</td><td className="px-4 py-3">{money(order.total)}</td><td className="px-4 py-3">{viOrderStatus(order.orderStatus)}</td></tr>)}</tbody>
               </table>
             </div>
           </div>
@@ -93,12 +70,12 @@ export default async function AdminDashboardPage() {
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <h2 className="font-semibold">Tổng quan dữ liệu</h2>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <Mini label="Sản phẩm" value={productCount} />
-                <Mini label="Danh mục" value={categoryCount} />
-                <Mini label="Khách hàng" value={customerCount} />
-                <Mini label="Nhà cung cấp" value={supplierCount} />
-                <Mini label="Tổng đơn" value={orderCount} />
-                <Mini label="Tồn thấp" value={lowStockRows.length} />
+                <Mini label="Sản phẩm" value={metrics.productCount} />
+                <Mini label="Danh mục" value={metrics.categoryCount} />
+                <Mini label="Khách hàng" value={metrics.customerCount} />
+                <Mini label="Nhà cung cấp" value={metrics.supplierCount} />
+                <Mini label="Tổng đơn" value={metrics.orderCount} />
+                <Mini label="Tồn thấp" value={metrics.lowStockCount} />
               </div>
             </section>
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

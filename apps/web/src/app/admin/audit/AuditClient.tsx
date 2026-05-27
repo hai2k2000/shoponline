@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type AuditRow = { id: string; user: string | null; action: string; entityType: string; entityId: string | null; description: string | null; createdAt: string };
 
@@ -8,13 +8,11 @@ export function AuditClient({ rows }: { rows: AuditRow[] }) {
   const [query, setQuery] = useState("");
   const [entityType, setEntityType] = useState("");
   const entityTypes = Array.from(new Set(rows.map((row) => row.entityType))).sort();
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    return rows.filter((row) => {
-      const matchesTerm = !term || [row.user || "", row.action, row.entityType, row.entityId || "", row.description || ""].some((value) => value.toLowerCase().includes(term));
-      return matchesTerm && (!entityType || row.entityType === entityType);
-    });
-  }, [entityType, query, rows]);
+  const term = query.trim().toLowerCase();
+  const filtered = rows.filter((row) => {
+    const matchesTerm = !term || [row.user || "", row.action, row.entityType, row.entityId || "", row.description || ""].some((value) => value.toLowerCase().includes(term));
+    return matchesTerm && (!entityType || row.entityType === entityType);
+  });
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 text-slate-950">

@@ -1,67 +1,30 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-
-type CartItem = { id: string; quantity: number };
-
-function orderCode() {
-  const now = new Date();
-  return `SO${now.toISOString().slice(0, 10).replaceAll("-", "")}${now.getTime().toString().slice(-6)}`;
-}
+import { CheckoutError, createPublicCheckoutOrder, type CheckoutCartItem } from "@/server/services/checkout-service";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
-function calcDiscount(promotion: { discountType: string; discountValue: unknown; minOrder: unknown; maxDiscount: unknown }, subtotal: number) {
-  if (subtotal < Number(promotion.minOrder || 0)) return 0;
-  const raw = promotion.discountType === "PERCENT" ? subtotal * Number(promotion.discountValue || 0) / 100 : Number(promotion.discountValue || 0);
-  const maxDiscount = promotion.maxDiscount == null ? raw : Math.min(raw, Number(promotion.maxDiscount || 0));
-  return Math.max(0, Math.min(subtotal, Math.floor(maxDiscount)));
-}
-
 export async function checkoutAction(formData: FormData) {
-  const rawCart = text(formData, "cart");
-  const items = JSON.parse(rawCart || "[]") as CartItem[];
-  const validItems = items.filter((item) => item.id && item.quantity > 0);
-  if (!validItems.length) return { ok: false, error: "Giỏ hàng trống." };
-  const customerName = text(formData, "name");
-  const phone = text(formData, "phone");
-  if (!customerName || !phone) return { ok: false, error: "Thiếu tên hoặc số điện thoại." };
-
-  const result = await prisma.$transaction(async (tx) => {
-    const customer = await tx.customer.create({ data: { name: customerName, phone, email: text(formData, "email") || null, address: text(formData, "address") || null, source: "Website", notes: text(formData, "note") || null } });
-    let subtotal = 0;
-    const orderItems = [];
-    for (const item of validItems) {
-      const product = await tx.product.findUnique({ where: { id: item.id }, include: { inventory: true } });
-      if (!product || product.status !== "ACTIVE") throw new Error("Sản phẩm không hợp lệ.");
-      const inventory = product.inventory || await tx.inventory.create({ data: { productId: product.id, quantity: 0, reservedQuantity: 0 } });
-      const available = inventory.quantity - inventory.reservedQuantity;
-      if (item.quantity > available) throw new Error(`Sản phẩm ${product.name} không đủ tồn.`);
-      const price = Number(product.promotionPrice || product.salePrice);
-      subtotal += price * item.quantity;
-      orderItems.push({ productId: product.id, productName: product.name, sku: product.sku, quantity: item.quantity, costPrice: product.costPrice, salePrice: price, total: price * item.quantity });
-      await tx.inventory.update({ where: { productId: product.id }, data: { reservedQuantity: inventory.reservedQuantity + item.quantity } });
-    }
-    const setting = await tx.storeSetting.findUnique({ where: { id: "default" } });
-    const shippingFee = Number(setting?.shippingFee || 0);
-    const couponCode = text(formData, "couponCode").toUpperCase();
-    let discount = 0;
-    if (couponCode) {
-      const now = new Date();
-      const promotion = await tx.promotion.findUnique({ where: { code: couponCode } });
-      if (!promotion || promotion.status !== "ACTIVE") throw new Error("Mã giảm giá không hợp lệ.");
-      if (promotion.startsAt && promotion.startsAt > now) throw new Error("Mã giảm giá chưa bắt đầu.");
-      if (promotion.endsAt && promotion.endsAt < now) throw new Error("Mã giảm giá đã hết hạn.");
-      if (promotion.usageLimit != null && promotion.usedCount >= promotion.usageLimit) throw new Error("Mã giảm giá đã hết lượt sử dụng.");
-      discount = calcDiscount(promotion, subtotal);
-      if (discount <= 0) throw new Error("Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá.");
-      await tx.promotion.update({ where: { id: promotion.id }, data: { usedCount: { increment: 1 } } });
-    }
-    const order = await tx.order.create({ data: { orderCode: orderCode(), customerId: customer.id, subtotal, shippingFee, discount, total: Math.max(0, subtotal + shippingFee - discount), orderStatus: "NEW", paymentStatus: "UNPAID", note: text(formData, "note") || null, items: { create: orderItems } } });
-    await tx.activityLog.create({ data: { action: "PUBLIC_CHECKOUT", entityType: "Order", entityId: order.id, description: `Khách đặt đơn ${order.orderCode}` } });
-    return { orderCode: order.orderCode };
-  });
-  return { ok: true, orderCode: result.orderCode };
+  try {
+    const rawCart = text(formData, "cart");
+    const items = JSON.parse(rawCart || "[]") as CheckoutCartItem[];
+    const result = await prisma.$transaction((tx) => createPublicCheckoutOrder(tx, {
+      items,
+      customerName: text(formData, "name"),
+      phone: text(formData, "phone"),
+      email: text(formData, "email") || null,
+      address: text(formData, "address") || null,
+      note: text(formData, "note") || null,
+      couponCode: text(formData, "couponCode") || null,
+    }));
+    return { ok: true, orderCode: result.orderCode };
+  } catch (error) {
+    if (error instanceof CheckoutError) return { ok: false, error: error.message };
+    if (error instanceof SyntaxError) return { ok: false, error: "Giỏ hàng không hợp lệ." };
+    console.error(error);
+    return { ok: false, error: "Không thể đặt hàng." };
+  }
 }

@@ -12,7 +12,12 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
   const [pending, startTransition] = useTransition();
-  useEffect(() => { setItems(JSON.parse(localStorage.getItem("shoponline.cart") || "[]")); }, []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setItems(JSON.parse(localStorage.getItem("shoponline.cart") || "[]"));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
   if (result) return <main className="grid min-h-screen place-items-center bg-slate-50 p-6 text-slate-950"><section className="grid max-w-md gap-4 rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm"><h1 className="text-2xl font-semibold">Đặt hàng thành công</h1><p>Mã đơn của bạn là <strong>{result}</strong></p><Link className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white" href={`/tracking?code=${result}`}>Theo dõi đơn</Link></section></main>;
   return (

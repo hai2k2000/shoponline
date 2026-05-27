@@ -7,7 +7,12 @@ type CartItem = { id: string; name: string; sku: string; price: number; quantity
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
-  useEffect(() => { setItems(JSON.parse(localStorage.getItem("shoponline.cart") || "[]")); }, []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setItems(JSON.parse(localStorage.getItem("shoponline.cart") || "[]"));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const save = (next: CartItem[]) => { setItems(next); localStorage.setItem("shoponline.cart", JSON.stringify(next)); };
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
   return (

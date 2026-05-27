@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 type ProductRow = { id: string; name: string; slug: string; sku: string; shortDescription: string | null; salePrice: number; promotionPrice: number | null; thumbnail: string | null; available: number };
 
 export function PublicProductsClient({ products }: { products: ProductRow[] }) {
