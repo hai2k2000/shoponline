@@ -437,3 +437,15 @@ Updated: 2026-05-27
 - Converted inventory import/export/adjust to `/api/admin/inventory` POST route.
 - Inventory route validates archived products, available stock for export, and reserved stock constraints for adjustment.
 - Inventory import smoke passed with stock increase and `IMPORT` transaction verification.
+
+## 2026-05-27 Customers And Suppliers Hardening Update
+
+- Converted customer create/update to `/api/admin/customers`.
+- Converted customer archive to `/api/admin/customers/archive`.
+- Converted supplier create/update to `/api/admin/suppliers`.
+- Converted supplier archive to `/api/admin/suppliers/archive`.
+- Customer and supplier pages now pass `SESSION_COOKIE` token into client forms.
+- Route handlers use cookie auth first, then `sessionToken` fallback for proxied/admin POST flows.
+- Redirects use `x-forwarded-proto` and `x-forwarded-host`.
+- Added `/tmp/shoponline-customers-suppliers-smoke.js`.
+- Build, Docker redeploy, customers/suppliers smoke, and `npm run smoke:prod` passed.

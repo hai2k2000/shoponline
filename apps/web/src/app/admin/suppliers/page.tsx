@@ -1,9 +1,13 @@
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { SESSION_COOKIE } from "@/lib/session";
 import { SuppliersClient } from "./SuppliersClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuppliersPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const rows = await prisma.supplier.findMany({
     orderBy: [{ updatedAt: "desc" }],
     include: {
@@ -19,6 +23,7 @@ export default async function SuppliersPage() {
 
   return (
     <SuppliersClient
+      sessionToken={sessionToken}
       rows={rows.map((row) => ({
         id: row.id,
         name: row.name,

@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { archiveSupplierAction, createSupplierAction, updateSupplierAction } from "./actions";
+import { useMemo, useState } from "react";
 
 type SupplierRow = {
   id: string;
@@ -20,7 +19,7 @@ type ModalState = { mode: "create" } | { mode: "edit"; row: SupplierRow } | { mo
 
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 
-export function SuppliersClient({ rows }: { rows: SupplierRow[] }) {
+export function SuppliersClient({ rows, sessionToken }: { rows: SupplierRow[]; sessionToken: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [modal, setModal] = useState<ModalState>(null);
@@ -95,7 +94,7 @@ export function SuppliersClient({ rows }: { rows: SupplierRow[] }) {
                       <div className="flex justify-end gap-2">
                         <button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "detail", row })}>Xem</button>
                         <button className="rounded-lg border border-slate-300 px-3 py-2 font-semibold" onClick={() => setModal({ mode: "edit", row })}>Sửa</button>
-                        {row.status !== "ARCHIVED" ? <ArchiveButton row={row} /> : null}
+                        {row.status !== "ARCHIVED" ? <ArchiveButton row={row} sessionToken={sessionToken} /> : null}
                       </div>
                     </td>
                   </tr>
@@ -106,19 +105,19 @@ export function SuppliersClient({ rows }: { rows: SupplierRow[] }) {
           </div>
         </section>
       </div>
-      {modal?.mode === "detail" ? <SupplierDetail row={modal.row} onClose={() => setModal(null)} /> : modal ? <SupplierModal modal={modal} onClose={() => setModal(null)} /> : null}
+      {modal?.mode === "detail" ? <SupplierDetail row={modal.row} onClose={() => setModal(null)} /> : modal ? <SupplierModal modal={modal} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
     </main>
   );
 }
 
-function SupplierModal({ modal, onClose }: { modal: Exclude<ModalState, null | { mode: "detail"; row: SupplierRow }>; onClose: () => void }) {
+function SupplierModal({ modal, sessionToken, onClose }: { modal: Exclude<ModalState, null | { mode: "detail"; row: SupplierRow }>; sessionToken: string; onClose: () => void }) {
   const row = modal.mode === "edit" ? modal.row : null;
-  const action = row ? updateSupplierAction : createSupplierAction;
-  const [pending, startTransition] = useTransition();
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-      <form onSubmit={(event) => { event.preventDefault(); const formData = new FormData(event.currentTarget); startTransition(async () => { await action(formData); window.location.reload(); }); }} className="grid w-full max-w-3xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+      <form action="/api/admin/suppliers" method="post" className="grid w-full max-w-3xl gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+        <input type="hidden" name="sessionToken" value={sessionToken} />
+        <input type="hidden" name="mode" value={row ? "update" : "create"} />
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-xl font-semibold">{row ? "Sửa nhà cung cấp" : "Tạo nhà cung cấp"}</h2>
           <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" onClick={onClose}>Đóng</button>
@@ -135,16 +134,15 @@ function SupplierModal({ modal, onClose }: { modal: Exclude<ModalState, null | {
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
           <button type="button" className="rounded-lg border border-slate-300 px-4 py-2 font-semibold" onClick={onClose}>Huỷ</button>
-          <button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white disabled:opacity-60" disabled={pending}>{pending ? "Đang lưu..." : "Lưu"}</button>
+          <button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white">Lưu</button>
         </div>
       </form>
     </div>
   );
 }
 
-function ArchiveButton({ row }: { row: SupplierRow }) {
-  const [pending, startTransition] = useTransition();
-  return <button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700 disabled:opacity-60" disabled={pending} onClick={() => { if (!confirm("Lưu trữ nhà cung cấp này?")) return; const formData = new FormData(); formData.set("id", row.id); startTransition(async () => { await archiveSupplierAction(formData); window.location.reload(); }); }}>{pending ? "Đang lưu..." : "Lưu trữ"}</button>;
+function ArchiveButton({ row, sessionToken }: { row: SupplierRow; sessionToken: string }) {
+  return <form action="/api/admin/suppliers/archive" method="post" onSubmit={(event) => { if (!confirm("Lưu trữ nhà cung cấp này?")) event.preventDefault(); }}><input type="hidden" name="sessionToken" value={sessionToken} /><input type="hidden" name="id" value={row.id} /><button className="rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700" type="submit">Lưu trữ</button></form>;
 }
 
 function SupplierDetail({ row, onClose }: { row: SupplierRow; onClose: () => void }) {

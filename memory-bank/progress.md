@@ -253,3 +253,11 @@
 - Added and passed an admin order hardening smoke for create plus status update.
 - Converted inventory import/export/adjust to a route handler.
 - Added and passed an inventory hardening smoke for import and transaction logging.
+
+## 2026-05-27 Customers And Suppliers Hardening
+
+- Converted customer create/update/archive flows from Server Action submissions to admin route handlers.
+- Converted supplier create/update/archive flows from Server Action submissions to admin route handlers.
+- Added cookie auth plus `sessionToken` fallback for these POST flows.
+- Added and passed `/tmp/shoponline-customers-suppliers-smoke.js` for create, update, and archive on both modules.
+- Rebuilt, redeployed, and passed `npm run smoke:prod` on VPS.
