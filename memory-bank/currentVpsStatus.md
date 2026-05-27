@@ -50,3 +50,17 @@ Updated: 2026-05-27
   - Anonymous `/admin/dashboard` redirects to `/admin/login`.
   - `admin@shoponline.local` / `ShopOnline@2026` logs in.
   - Logout returns to login.
+
+## 2026-05-27 Categories CRUD Update
+
+- Replaced `/admin/categories` placeholder with a real Prisma-backed CRUD screen.
+- Added list-first category management with search, status filter, create/edit modal, and archive action.
+- Category mutations write `ActivityLog`.
+- Archive is used instead of hard delete.
+- Build and Docker redeploy passed.
+- Browser smoke passed:
+  - Login.
+  - Create category.
+  - Search category.
+  - Archive category.
+  - Verify archived status.

@@ -1,14 +1,28 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { CategoriesClient } from "./CategoriesClient";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function CategoriesPage() {
+  const rows = await prisma.category.findMany({
+    orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+    include: { parent: { select: { name: true } }, _count: { select: { products: true } } },
+  });
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
-      <section className="mx-auto grid max-w-5xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold text-emerald-700">ShopOnline</p>
-        <h1 className="text-3xl font-semibold">Qu?n l? danh m?c</h1>
-        <p className="text-slate-600">Danh m?c nhi?u c?p, s?p x?p v? tr?ng th?i.</p>
-        <Link className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" href="/admin/dashboard">V? dashboard</Link>
-      </section>
-    </main>
+    <CategoriesClient
+      rows={rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        description: row.description,
+        sortOrder: row.sortOrder,
+        status: row.status,
+        updatedAt: row.updatedAt.toISOString(),
+        parentId: row.parentId,
+        parentName: row.parent?.name || null,
+        productCount: row._count.products,
+      }))}
+    />
   );
 }

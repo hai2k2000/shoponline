@@ -48,3 +48,10 @@
 - Dashboard now requires current user and reads DB metrics dynamically.
 - Rebuilt and redeployed `shoponline-web`.
 - Browser auth smoke passed on VPS.
+
+## 2026-05-27 Categories CRUD
+
+- Implemented real `/admin/categories` module.
+- Added server actions for create, update, and archive.
+- Added list-first UI with modal create/edit.
+- Added category CRUD browser smoke test on VPS.
