@@ -36,8 +36,9 @@
     "smoke:tracking": "tsx scripts/smoke-tracking.ts",
     "smoke:uat-pages": "tsx scripts/smoke-uat-pages.ts",
     "smoke:cleanup": "tsx scripts/cleanup-smoke-data.ts",
-    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking && npm run smoke:uat-pages && npm run smoke:admin-ui && npm run smoke:public-ui",
+    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking && npm run smoke:uat-pages && npm run smoke:admin-ui && npm run smoke:public-ui && npm run smoke:public-flow",
     "smoke:admin-ui": "tsx scripts/smoke-admin-ui.ts",
-    "smoke:public-ui": "tsx scripts/smoke-public-ui.ts"
+    "smoke:public-ui": "tsx scripts/smoke-public-ui.ts",
+    "smoke:public-flow": "tsx scripts/smoke-public-flow.ts"
   }
 }
