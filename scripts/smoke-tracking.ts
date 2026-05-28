@@ -71,7 +71,7 @@ async function main() {
     throw new Error("Tracking page did not render the smoke order.");
   }
   const missingHtml = await fetchText(`/tracking?code=MISSING${stamp}`);
-  if (!missingHtml.includes("Không tìm thấy đơn hàng.")) throw new Error("Tracking page did not render missing-order state.");
+  if (!missingHtml.includes("Không tìm thấy đơn hàng")) throw new Error("Tracking page did not render missing-order state.");
 
   console.log("ShopOnline tracking smoke passed");
 }

@@ -1,43 +1,37 @@
-import Link from "next/link";
+import { ArrowLink, money, ProductImage, StatTile, StoreButton, StoreShell } from "@/components/public/ui";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [setting, products, completedOrders] = await Promise.all([
+  const [setting, products, completedOrders, activeProducts] = await Promise.all([
     prisma.storeSetting.findUnique({ where: { id: "default" } }),
     prisma.product.findMany({ where: { status: "ACTIVE" }, orderBy: { updatedAt: "desc" }, take: 4, include: { inventory: true } }),
     prisma.order.count({ where: { orderStatus: "COMPLETED" } }),
+    prisma.product.count({ where: { status: "ACTIVE" } }),
   ]);
+  const heroProduct = products[0];
+  const storeName = setting?.storeName || "ShopOnline";
+
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link className="text-xl font-semibold" href="/">{setting?.storeName || "ShopOnline"}</Link>
-          <nav className="flex gap-4 text-sm font-semibold"><Link href="/products">Sản phẩm</Link><Link href="/cart">Giỏ hàng</Link><Link href="/tracking">Tra cứu đơn</Link><Link href="/admin/dashboard">Quản trị</Link></nav>
+    <StoreShell storeName={storeName}>
+      <section className="grid gap-8 py-4 lg:grid-cols-[1fr_420px] lg:items-center">
+        <div className="grid gap-5">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">Cửa hàng trực tuyến</p>
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">{storeName}</h1>
+          <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">Mua hàng nhanh, tồn kho hiển thị theo dữ liệu thật và tra cứu trạng thái đơn rõ ràng sau khi đặt hàng.</p>
+          <div className="flex flex-wrap gap-3"><StoreButton href="/products">Xem sản phẩm</StoreButton><StoreButton href="/tracking" variant="outline">Tra cứu đơn</StoreButton></div>
+          <div className="grid gap-3 sm:grid-cols-3"><StatTile label="Sản phẩm đang bán" value={activeProducts} /><StatTile label="Đơn đã hoàn tất" value={completedOrders} /><StatTile label="Phí giao hàng" value={money(Number(setting?.shippingFee || 0))} /></div>
         </div>
-      </header>
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-12 lg:grid-cols-[1fr_420px]">
-        <div className="grid content-center gap-5">
-          <p className="text-sm font-semibold uppercase tracking-[.18em] text-emerald-700">Online store</p>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{setting?.storeName || "ShopOnline"}</h1>
-          <p className="max-w-2xl text-lg leading-8 text-slate-600">Mua hàng nhanh, theo dõi đơn rõ ràng, tồn kho đồng bộ trực tiếp với hệ thống quản trị.</p>
-          <div className="flex flex-wrap gap-3"><Link className="rounded-lg bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/products">Xem sản phẩm</Link><Link className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold" href="/tracking">Tra cứu đơn</Link></div>
-        </div>
-        <aside className="grid gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <Metric label="Sản phẩm đang bán" value={products.length} />
-          <Metric label="Đơn đã hoàn tất" value={completedOrders} />
-          <Metric label="Phí giao hàng" value={money(Number(setting?.shippingFee || 0))} />
-          <Metric label="Liên hệ" value={setting?.phone || "Đang cập nhật"} />
+        <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          {heroProduct ? <div className="grid gap-4"><ProductImage src={heroProduct.thumbnail} alt={heroProduct.name} /><div><p className="text-sm font-semibold text-emerald-700">Sản phẩm mới</p><h2 className="mt-1 text-xl font-semibold">{heroProduct.name}</h2><p className="mt-1 text-sm text-slate-500">{heroProduct.shortDescription || heroProduct.sku}</p><strong className="mt-3 block text-2xl">{money(Number(heroProduct.promotionPrice || heroProduct.salePrice))}</strong></div><StoreButton href="/products">Mua ngay</StoreButton></div> : <div className="grid min-h-80 place-items-center text-center text-slate-500">Sản phẩm đang được cập nhật.</div>}
         </aside>
       </section>
-      <section className="mx-auto max-w-7xl px-6 pb-12">
-        <div className="mb-4 flex items-center justify-between"><h2 className="text-2xl font-semibold">Sản phẩm mới</h2><Link className="text-sm font-semibold text-emerald-700" href="/products">Xem tất cả</Link></div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <article key={product.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-sm text-slate-500">{product.sku}</p><strong className="mt-3 block">{money(Number(product.salePrice))}</strong></article>)}</div>
+
+      <section className="grid gap-4 pb-10">
+        <div className="flex items-center justify-between gap-3"><h2 className="text-2xl font-semibold">Sản phẩm mới</h2><ArrowLink href="/products">Xem tất cả</ArrowLink></div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <article key={product.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><ProductImage src={product.thumbnail} alt={product.name} /><div><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-sm text-slate-500">{product.sku}</p></div><strong>{money(Number(product.promotionPrice || product.salePrice))}</strong></article>)}</div>
       </section>
-    </main>
+    </StoreShell>
   );
 }
-
-function Metric({ label, value }: { label: string; value: string | number }) { return <div className="rounded-lg bg-slate-50 p-4"><span className="text-sm text-slate-500">{label}</span><strong className="mt-1 block text-xl">{value}</strong></div>; }
-function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }
