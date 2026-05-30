@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   pull_request:
@@ -16,6 +16,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: shoponline
+          POSTGRES_PASSWORD: shoponline
+          POSTGRES_DB: shoponline_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shoponline -d shoponline_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://shoponline:shoponline@localhost:5432/shoponline_ci?schema=public
+      AUTH_SECRET: ci-auth-secret-change-in-production
+      NEXT_TELEMETRY_DISABLED: "1"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -28,6 +48,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify clean database migrations
+        run: npm run prisma:migrate
 
       - name: Run CI checks
         run: npm run check:ci

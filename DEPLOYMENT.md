@@ -14,15 +14,21 @@ SmartTour uses `3001/4000/5433/6380`, so keep ShopOnline on the separate ports a
 
 ## Deploy
 
+Operator handoff and daily production checklist: see `OPERATOR_HANDOFF.md`.
+
 ## CI Checks
 
 GitHub Actions runs `npm run check:ci` on pull requests and pushes to `main`.
+
+The CI workflow also starts a clean PostgreSQL service and runs `npm run prisma:migrate` before `check:ci`, so migration drift is caught before merge.
 
 `check:ci` performs:
 
 - `npm run lint`
 - `npm run build`
-- `npm run audit:high`
+- `npm run audit:security`
+
+`audit:security` fails on high/critical vulnerabilities and on any unreviewed moderate vulnerability. The current known moderate advisory is the transitive Next.js/PostCSS advisory; Next `16.2.6` is still the latest package release and still depends on the affected PostCSS range, so the guard allows only that specific advisory until a safe Next.js release is available.
 
 The VPS-only `npm run check` remains stricter because it also verifies Postgres backups and runs the full smoke regression against the deployed service.
 
@@ -62,7 +68,9 @@ docker compose up -d
 npm run smoke:regression
 ```
 
-`smoke:prod` retries each public endpoint by default, so it can be run immediately after a container restart. `smoke:regression` also covers admin, checkout, reporting, and tracking flows.
+`smoke:prod` retries each public endpoint by default, so it can be run immediately after a container restart. `smoke:regression` also covers admin, checkout, reporting, tracking, catalog workflow checks, and business UAT.
+
+Because public pages are currently locked, unauthenticated `/`, `/products`, `/cart`, `/checkout`, and `/tracking` should return redirects to `/admin/login`. This is expected.
 
 ## Health Check
 
@@ -71,6 +79,26 @@ curl http://127.0.0.1:3002/api/health
 ```
 
 Expected: JSON with `ok: true` and `database: "ok"`.
+
+Readiness smoke:
+
+```sh
+cd /opt/shoponline
+npm run smoke:readiness
+```
+
+This confirms the root route is locked, login renders, health responds, and obvious login mojibake strings are absent.
+
+Release readiness before handing the site to operators:
+
+```sh
+cd /opt/shoponline
+npm run release:readiness
+```
+
+This runs the security audit guard, backup restore verification, readiness smoke, production smoke, catalog workflow checks, business UAT, tracking reconciliation, and a smoke/UAT cleanup dry-run. It does not destructively remove smoke data.
+
+The same operational checklist is also visible in the admin UI at `/admin/system`.
 
 ## Security Headers
 
@@ -163,6 +191,16 @@ npm run docker:clean
 ```
 
 Do not run `docker system prune --volumes`; it can remove database volumes.
+
+Smoke/UAT data cleanup is separate from Docker cleanup:
+
+```sh
+cd /opt/shoponline
+npm run smoke:cleanup
+CONFIRM_SMOKE_CLEANUP=yes npm run smoke:cleanup
+```
+
+The first command is dry-run and should be reviewed before running the confirmed cleanup.
 
 ## Container Health
 

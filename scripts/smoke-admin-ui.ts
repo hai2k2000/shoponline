@@ -36,6 +36,7 @@ const adminRoutes: UiRoute[] = [
   { path: "/admin/settings", title: "Cài đặt cửa hàng", requireText: ["Lưu cài đặt", "Chính sách tồn kho"] },
   { path: "/admin/audit", title: "Nhật ký hệ thống", table: true, requireText: ["Tìm kiếm", "Nghiệp vụ"] },
   { path: "/admin/automation", title: "Tự động hóa vận hành", requireText: ["Lịch sử chạy automation", "Tổng lần chạy"] },
+  { path: "/admin/system", title: "System status", requireText: ["release:readiness", "Business data snapshot", "Operator UAT checklist"] },
   { path: "/admin/notifications", title: "Thông báo", table: true, requireText: ["Đánh dấu đã đọc"] },
 ];
 

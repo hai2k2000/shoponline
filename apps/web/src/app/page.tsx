@@ -24,13 +24,13 @@ export default async function HomePage() {
           <div className="grid gap-3 sm:grid-cols-3"><StatTile label="Sản phẩm đang bán" value={activeProducts} /><StatTile label="Đơn đã hoàn tất" value={completedOrders} /><StatTile label="Phí giao hàng" value={money(Number(setting?.shippingFee || 0))} /></div>
         </div>
         <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          {heroProduct ? <div className="grid gap-4"><ProductImage src={heroProduct.thumbnail} alt={heroProduct.name} /><div><p className="text-sm font-semibold text-emerald-700">Sản phẩm mới</p><h2 className="mt-1 text-xl font-semibold">{heroProduct.name}</h2><p className="mt-1 text-sm text-slate-500">{heroProduct.shortDescription || heroProduct.sku}</p><strong className="mt-3 block text-2xl">{money(Number(heroProduct.promotionPrice || heroProduct.salePrice))}</strong></div><StoreButton href="/products">Mua ngay</StoreButton></div> : <div className="grid min-h-80 place-items-center text-center text-slate-500">Sản phẩm đang được cập nhật.</div>}
+          {heroProduct ? <div className="grid gap-4"><ProductImage src={heroProduct.thumbnail} alt={heroProduct.name} /><div><p className="text-sm font-semibold text-emerald-700">Sản phẩm mới</p><h2 className="mt-1 text-xl font-semibold">{heroProduct.name}</h2><p className="mt-1 text-sm text-slate-500">{heroProduct.shortDescription || heroProduct.sku}</p><strong className="mt-3 block text-2xl">{money(Number(heroProduct.promotionPrice || heroProduct.salePrice))}</strong></div><StoreButton href={`/products/${heroProduct.slug}`}>Mua ngay</StoreButton></div> : <div className="grid min-h-80 place-items-center text-center text-slate-500">Sản phẩm đang được cập nhật.</div>}
         </aside>
       </section>
 
       <section className="grid gap-4 pb-10">
         <div className="flex items-center justify-between gap-3"><h2 className="text-2xl font-semibold">Sản phẩm mới</h2><ArrowLink href="/products">Xem tất cả</ArrowLink></div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <article key={product.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><ProductImage src={product.thumbnail} alt={product.name} /><div><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-sm text-slate-500">{product.sku}</p></div><strong>{money(Number(product.promotionPrice || product.salePrice))}</strong></article>)}</div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <article key={product.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><ProductImage src={product.thumbnail} alt={product.name} /><div><h3 className="font-semibold">{product.name}</h3><p className="mt-1 text-sm text-slate-500">{product.sku}</p></div><strong>{money(Number(product.promotionPrice || product.salePrice))}</strong><StoreButton href={`/products/${product.slug}`} variant="outline">Xem chi tiết</StoreButton></article>)}</div>
       </section>
     </StoreShell>
   );

@@ -6,13 +6,13 @@ import { SettingsClient } from "./SettingsClient";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const setting = await prisma.storeSetting.upsert({
     where: { id: "default" },
     create: { id: "default", storeName: "ShopOnline" },
     update: {},
   });
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   return (
     <SettingsClient
       sessionToken={sessionToken}

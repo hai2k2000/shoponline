@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Bell, Boxes, ClipboardList, LayoutDashboard, LogOut, Package, ReceiptText, Settings, ShieldCheck, Truck, Users, WalletCards } from "lucide-react";
 
@@ -52,6 +51,7 @@ const navGroups: NavGroup[] = [
       { label: "Nhật ký", href: "/admin/audit", icon: ShieldCheck },
       { label: "Thông báo", href: "/admin/notifications", icon: Bell },
       { label: "Automation", href: "/admin/automation", icon: Settings },
+      { label: "System", href: "/admin/system", icon: ShieldCheck },
       { label: "Người dùng", href: "/admin/users", icon: Users },
       { label: "Cài đặt", href: "/admin/settings", icon: Settings },
     ],
@@ -66,11 +66,11 @@ export function AdminFrame({ user, children }: { user: AdminUser; children: Reac
     <div className="min-h-screen bg-slate-50 text-slate-950 lg:flex">
       <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-4 lg:block">
-          <Link href="/admin/dashboard" className="block rounded-lg outline-none focus:ring-2 focus:ring-slate-300">
+          <a href="/admin/dashboard" className="block rounded-lg outline-none focus:ring-2 focus:ring-slate-300">
             <span className="block text-lg font-semibold">ShopOnline</span>
             <span className="text-xs font-semibold text-emerald-700">Business Hub</span>
-          </Link>
-          <Link className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold lg:mt-4 lg:w-full lg:justify-center" href="/admin/logout"><LogOut className="size-4" />Đăng xuất</Link>
+          </a>
+          <a className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold lg:mt-4 lg:w-full lg:justify-center" href="/admin/logout"><LogOut className="size-4" />Đăng xuất</a>
         </div>
 
         <nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:grid lg:flex-1 lg:content-start lg:gap-4 lg:overflow-y-auto">
@@ -81,10 +81,10 @@ export function AdminFrame({ user, children }: { user: AdminUser; children: Reac
                 const Icon = item.icon;
                 const active = pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(`${item.href}/`));
                 return (
-                  <Link key={item.href} href={item.href} className={`inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-100"}`}>
+                  <a key={item.href} href={item.href} className={`inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-100"}`}>
                     <Icon className="size-4" />
                     {item.label}
-                  </Link>
+                  </a>
                 );
               })}
             </div>

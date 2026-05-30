@@ -1,35 +1,30 @@
 "use client";
 
-import { AdminPage, Button, Field, inputClass, PageHeader, StatCard, textareaClass } from "@/components/admin/ui";
-
 type SettingRow = { storeName: string; logo: string | null; phone: string | null; email: string | null; address: string | null; shippingFee: number; inventoryStrategy: string };
 
 export function SettingsClient({ setting, sessionToken }: { setting: SettingRow; sessionToken: string }) {
   return (
-    <AdminPage>
-      <PageHeader eyebrow="Admin / Cài đặt" title="Cài đặt cửa hàng" description="Thông tin thương hiệu, liên hệ, phí giao hàng mặc định và chính sách tồn kho áp dụng toàn hệ thống." />
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Tên cửa hàng" value={setting.storeName} hint="Hiển thị trên storefront" />
-        <StatCard label="Phí giao hàng" value={money(setting.shippingFee)} tone="blue" hint="Mặc định khi checkout" />
-        <StatCard label="Chính sách tồn kho" value={setting.inventoryStrategy === "PREVENT_NEGATIVE" ? "Chặn âm kho" : "Cho bán âm"} tone={setting.inventoryStrategy === "PREVENT_NEGATIVE" ? "emerald" : "amber"} hint="Ảnh hưởng đơn hàng mới" />
-      </section>
-
-      <form action="/api/admin/settings" method="post" className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <input type="hidden" name="sessionToken" value={sessionToken} />
-        <section className="grid gap-3 md:grid-cols-2">
-          <Field label="Tên cửa hàng"><input required className={inputClass} name="storeName" defaultValue={setting.storeName} /></Field>
-          <Field label="Logo URL"><input className={inputClass} name="logo" defaultValue={setting.logo || ""} placeholder="https://..." /></Field>
-          <Field label="Số điện thoại"><input className={inputClass} name="phone" defaultValue={setting.phone || ""} /></Field>
-          <Field label="Email"><input className={inputClass} name="email" type="email" defaultValue={setting.email || ""} /></Field>
-          <Field label="Phí giao hàng mặc định"><input className={inputClass} name="shippingFee" type="number" min={0} defaultValue={setting.shippingFee} /></Field>
-          <Field label="Chính sách tồn kho"><select className={inputClass} name="inventoryStrategy" defaultValue={setting.inventoryStrategy}><option value="PREVENT_NEGATIVE">Không cho bán âm kho</option><option value="ALLOW_NEGATIVE">Cho phép bán âm kho</option></select></Field>
-          <Field label="Địa chỉ" wide><textarea className={textareaClass} name="address" rows={3} defaultValue={setting.address || ""} /></Field>
-        </section>
-        <div className="flex justify-end border-t border-slate-100 pt-4"><Button type="submit">Lưu cài đặt</Button></div>
-      </form>
-    </AdminPage>
+    <main className="min-h-screen bg-slate-50 p-6 text-slate-950">
+      <div className="mx-auto grid max-w-5xl gap-6">
+        <header>
+          <p className="text-sm font-semibold text-emerald-700">Admin / Cài đặt</p>
+          <h1 className="text-3xl font-semibold">Cài đặt cửa hàng</h1>
+          <p className="mt-1 text-sm text-slate-600">Thông tin thương hiệu, liên hệ, phí giao hàng và chính sách tồn kho.</p>
+        </header>
+        <form action="/api/admin/settings" method="post" className="grid gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <input type="hidden" name="sessionToken" value={sessionToken} />
+          <section className="grid gap-4 md:grid-cols-2">
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Tên cửa hàng<input required className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="storeName" defaultValue={setting.storeName} /></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Logo URL<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="logo" defaultValue={setting.logo || ""} placeholder="https://..." /></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Số điện thoại<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="phone" defaultValue={setting.phone || ""} /></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Email<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="email" type="email" defaultValue={setting.email || ""} /></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Phí giao hàng mặc định<input className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="shippingFee" type="number" min={0} defaultValue={setting.shippingFee} /></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700">Chính sách tồn kho<select className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="inventoryStrategy" defaultValue={setting.inventoryStrategy}><option value="PREVENT_NEGATIVE">Không cho bán âm kho</option><option value="ALLOW_NEGATIVE">Cho phép bán âm kho</option></select></label>
+            <label className="grid gap-1 text-sm font-semibold text-slate-700 md:col-span-2">Địa chỉ<textarea className="rounded-lg border border-slate-300 px-3 py-2 font-normal" name="address" rows={3} defaultValue={setting.address || ""} /></label>
+          </section>
+          <div className="flex justify-end border-t border-slate-100 pt-4"><button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white">Lưu cài đặt</button></div>
+        </form>
+      </div>
+    </main>
   );
 }
-
-function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }

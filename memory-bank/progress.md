@@ -68,6 +68,41 @@
 - Rebuilt and redeployed `shoponline-web`.
 - Browser auth smoke passed on VPS.
 
+## 2026-05-28 Admin Username Login
+
+- Changed `/admin/login` to show `Tên đăng nhập` instead of email.
+- Default admin login is now `admin` / `123456`.
+- Kept the existing internal admin email `admin@shoponline.local` and mapped username `admin` to it in the login action to avoid a schema migration and preserve existing scripts.
+- Updated seed defaults so future seed runs recreate the same admin credential.
+- Updated the live VPS admin user password hash and status.
+- Verified `npm run lint`, `npm run build`, `docker compose up -d --build web`, `npm run smoke:prod`, and `npm run smoke:admin-auth`.
+
+## 2026-05-28 Site Login Lock
+
+- Updated `apps/web/src/proxy.ts` so public routes now require the existing session cookie.
+- Unauthenticated requests to `/`, `/products`, `/cart`, `/checkout`, `/tracking`, and admin pages redirect to `/admin/login` with a `next` query.
+- Left `/admin/login`, `/admin/logout`, `/api/health`, Next.js static assets, and public files accessible so login, logout, and container healthchecks continue to work.
+- Rebuilt and redeployed `shoponline-web`.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - `npm run smoke:prod` passed with public routes returning HTTP 307.
+  - `https://cargo.io.vn/` returns HTTP 307 to `/admin/login?next=%2F`.
+
+## 2026-05-28 Admin Navigation Login Loop Fix
+
+- Login form now carries the `next` query through a hidden field.
+- Login action redirects to a validated `next` path after successful login instead of always redirecting to `/admin/dashboard`.
+- Removed the `Về website` link from the login screen because the public site is now locked and the link created a confusing loop.
+- Adjusted proxy to allow `/api/admin/*` route handlers through; those handlers still enforce auth/RBAC themselves and need access to form `sessionToken`.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-auth` passed.
+  - Authenticated requests to `/admin/dashboard`, `/admin/products`, `/admin/orders`, and `/admin/settings` returned HTTP 200.
+
 ## 2026-05-27 Categories CRUD
 
 - Implemented real `/admin/categories` module.
@@ -258,6 +293,168 @@
 - Added and passed a VPS promotion smoke for admin coupon creation and public checkout.
 
 ## 2026-05-27 Audit Log
+
+## 2026-05-28 Shipments And Purchases UI Detail
+
+- Continued ShopOnline work on VPS `/opt/shoponline` via SSH key.
+- Read `AGENTS.md` and `memory-bank`.
+- Added `Xem` detail modal workflow to `/admin/shipments`.
+- Added `Xem` detail modal workflow to `/admin/purchases`, including full item breakdown table.
+- Kept changes UI-only; no database, service, route handler, or migration changes.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Returns Promotions Audit UI Detail
+
+- Added `Xem` detail modal workflow to `/admin/returns`.
+- Added `Xem` detail modal workflow to `/admin/promotions`.
+- Added `Xem` detail modal workflow to `/admin/audit`.
+- Kept changes UI-only; no route handler, service, database, or migration changes.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Notifications And Timeline UI Detail
+
+- Added `Xem` detail modal workflow to `/admin/notifications`.
+- Added `Xem` detail modal workflow to `/admin/customers/timeline`.
+- Kept changes UI-only; no route handler, service, database, or migration changes.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Users UI Detail
+
+- Added `Xem` detail modal workflow to `/admin/users`.
+- Detail modal shows email, role, status, current-account flag, created/updated timestamps, and user ID.
+- Kept changes UI-only; no route handler, service, database, or migration changes.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Automation UI Detail
+
+- Added per-run JSON detail disclosure to `/admin/automation` history table.
+- Kept page as a server-rendered admin page and avoided route/API changes.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Public Product Detail
+
+- Added public product detail route `/products/[slug]`.
+- Product detail reads active product, category, store settings, and inventory from Prisma.
+- Detail page shows image, category, SKU, sale/promotion price, available stock, order availability, description, and cart actions.
+- Product listing now includes `Xem chi tiết` for each product.
+- Updated `scripts/smoke-public-flow.ts` to verify product detail pages.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:public-ui` passed.
+  - `npm run smoke:public-flow` passed including `/products/[slug]`.
+
+## 2026-05-28 Public Tracking Breakdown
+
+- Updated `/tracking` order result UI to show:
+  - Order created time.
+  - Payment status.
+  - Subtotal.
+  - Shipping fee.
+  - Discount when present.
+  - Final total.
+- Updated `scripts/smoke-public-flow.ts` to verify tracking payment status and shipping fee text.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:public-flow` passed.
+
+## 2026-05-28 Public Cart Summary
+
+- Updated `/cart` summary to label totals as `Tạm tính`.
+- Added helper text that shipping fee and coupon discount are calculated during checkout.
+- Added `Xóa giỏ` action when cart has items.
+- Updated `scripts/smoke-public-ui.ts` to verify cart summary text.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:public-ui` passed.
+  - `npm run smoke:public-flow` passed.
+
+## 2026-05-28 Public Checkout Summary
+
+- Updated `/checkout` order summary with item count.
+- Shows entered coupon code as a badge in the summary.
+- Added helper text that shipping fee and coupon discount are confirmed when creating the order.
+- Updated `scripts/smoke-public-ui.ts` to verify checkout summary text.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:public-ui` passed.
+  - `npm run smoke:public-flow` passed.
+
+## 2026-05-28 Settings Storefront Preview
+
+- Updated `/admin/settings` with a storefront preview panel.
+- Preview shows configured logo/initials, store name, phone, email, address, and default shipping fee.
+- Kept settings form and `/api/admin/settings` behavior unchanged.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
+
+## 2026-05-28 Public Home Detail Links
+
+- Updated public home hero `Mua ngay` to link directly to `/products/[slug]`.
+- Added `Xem chi tiết` buttons to product cards on the home page.
+- Updated `scripts/smoke-public-ui.ts` to verify the home detail-link text.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:public-ui` passed.
+  - `npm run smoke:public-flow` passed.
+
+## 2026-05-28 Product Table Focus
+
+- User redirected work away from hero/card polish and toward product-related table/list workflows.
+- Updated `/admin/products` table:
+  - Added `Cập nhật` sortable column.
+  - Added `Xem` row action.
+  - Added product detail modal for SKU, slug, category, pricing, stock totals, reserved stock, available stock, min stock, status, updated time, thumbnail URL, and descriptions.
+- Kept product create/update/archive behavior unchanged.
+- Verified:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web redeploy passed.
+  - `npm run smoke:prod` passed.
+  - `npm run smoke:admin-ui` passed for 21 admin routes.
 
 - Added `/admin/audit` for browsing `ActivityLog`.
 - Added search, entity filter, metrics, and latest log table.
@@ -487,3 +684,512 @@
 - Reworked the payment recording modal to match the new admin form shell and show an empty-order state when all orders are fully paid.
 - Deployed the updated payments UI to the VPS production container.
 - Verified lint, build, UAT page smoke, production deploy, full regression smoke, container health, and post-regression smoke cleanup.
+
+## 2026-05-28 Root Login Target Fix
+
+- Fixed the root-login loop where visiting `cargo.io.vn/` produced `next=/` and login returned to the public home page.
+- Proxy now maps unauthenticated `/` to `/admin/login?next=/admin/dashboard`.
+- Proxy now maps authenticated `/` directly to `/admin/dashboard`.
+- Login uses a normal POST form to `/admin/login/submit`; the route sets `shoponline.session` and redirects using `Host` / `X-Forwarded-Proto` so it stays on `https://cargo.io.vn`.
+- Tightened `/api/admin/settings` auth so inactive users supplied through `sessionToken` are rejected.
+- Verified on `https://cargo.io.vn`:
+  - No cookie on `/` returns `307 /admin/login?next=%2Fadmin%2Fdashboard`.
+  - POST login returns `303 Location: https://cargo.io.vn/admin/dashboard`.
+  - With cookie, `/` returns `307 /admin/dashboard`.
+  - `/admin/dashboard`, `/admin/products`, `/admin/orders`, and `/admin/settings` return HTTP 200.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-auth`.
+
+## 2026-05-28 Admin Sidebar Navigation Hard Reload
+
+- User still saw menu clicks redirecting back to login even though authenticated page requests returned HTTP 200 with the session cookie.
+- Changed admin sidebar navigation in `AdminFrame` from Next client `Link` components to normal `<a href>` anchors.
+- This forces each menu click to make a fresh document request with the current `shoponline.session` cookie and avoids stale client-router redirect cache.
+- Verified dashboard HTML renders sidebar items as normal anchors for `/admin/products`, `/admin/orders`, and `/admin/settings`.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-auth`, and `npm run smoke:admin-ui`.
+
+## 2026-05-28 Inventory Detail Workflow
+
+- Continued product/inventory table workflow polish.
+- Added `Xem` row action to `/admin/inventory`.
+- Added per-SKU inventory detail modal with:
+  - Category, status, last update, min stock.
+  - Total stock, reserved stock, available stock.
+  - Stock value, cost price, sale price, gross profit per item, gross margin.
+  - Recent transactions filtered to the selected SKU.
+- Kept import/export/adjust flows unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+
+## 2026-05-28 Category Product Drilldown
+
+- Continued product/category table workflow polish.
+- Extended `/admin/categories` page query to include products for each category with SKU, status, pricing, inventory, reserved stock, and updated timestamp.
+- Added `Xem` row action to the categories table.
+- Added category detail modal with:
+  - Status, parent category, sort order, last update, description.
+  - Total products, active products, available products, and stock availability summary.
+  - Product list for that category with SKU, price/promotion price, total stock, reserved stock, available stock, status, and update time.
+- Kept create/edit/archive category flows unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+
+## 2026-05-28 Catalog Cross Links
+
+- Added query-based quick filters:
+  - `/admin/products?search=...`
+  - `/admin/products?categoryId=...`
+  - `/admin/inventory?search=...`
+  - `/admin/categories?search=...`
+- Product detail modal now links to the matching inventory row and category search.
+- Inventory detail modal now links back to the matching product row.
+- Category detail product table now includes `Mở sản phẩm` and `Mở tồn kho` links for each SKU.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified on `https://cargo.io.vn` with a real session cookie that products, inventory, and categories query URLs return HTTP 200.
+
+## 2026-05-28 Low Stock Action Workflow
+
+- Added a `Cần xử lý tồn thấp` panel to `/admin/inventory`.
+- The panel lists low/out-of-available SKUs, category, available stock, min stock, and suggested import quantity.
+- Added `Lọc tồn thấp` shortcut to set the stock filter and sort by available stock ascending.
+- Added `Nhập đề xuất` row action that opens the import modal with suggested quantity and default note `Nhập bổ sung tồn thấp`.
+- Low-stock metrics now use available stock (`quantity - reservedQuantity`) compared to `minStock`.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `https://cargo.io.vn/admin/inventory` returns HTTP 200 with a real session cookie and expected inventory text.
+
+## 2026-05-28 Purchase Restock Integration
+
+- Connected the low-stock panel on `/admin/inventory` to the purchase-order workflow.
+- Added `Tao don nhap` action per low-stock SKU, linking to `/admin/purchases?productId=...&quantity=...&note=...`.
+- Updated `/admin/purchases` to read `productId`, `quantity`, and `note` query params and open the create purchase modal prefilled from the low-stock alert.
+- Added product and inventory cross-links inside the purchase detail modal for each purchased SKU.
+- Added supplier cross-links from purchase rows and purchase detail modal into `/admin/suppliers?search=...`.
+- Added `/admin/suppliers?search=...` quick filter support.
+- Added clearer receive guidance and a confirmation prompt before receiving a purchase order because receiving writes inventory transactions and increases stock.
+- Kept direct stock import available through the existing `Nhap de xuat` action.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and `https://cargo.io.vn/admin/purchases` plus `https://cargo.io.vn/admin/suppliers?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Supplier Purchase Drilldown
+
+- Extended `/admin/suppliers` data with the 5 most recent purchase orders per supplier.
+- Reworked the supplier detail modal to show purchase summary metrics:
+  - Recent purchase count.
+  - Ordered purchases still waiting to receive.
+  - Received purchase value.
+- Added a purchase history table inside the supplier detail modal with purchase code, status, quantity, total, and handling date.
+- Linked each purchase code back to `/admin/purchases?search=...`.
+- Kept supplier create/update/archive behavior unchanged.
+- Rewrote the supplier client file with clean UTF-8 Vietnamese text to avoid smoke failures from encoding drift.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and `https://cargo.io.vn/admin/suppliers?search=test` plus `https://cargo.io.vn/admin/purchases?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Product Table Action Shortcuts
+
+- Added direct row actions on `/admin/products`:
+  - `Ton kho` opens `/admin/inventory?search=SKU`.
+  - `Nhap` opens `/admin/purchases?productId=...&quantity=...&note=...`.
+- Added `Tao don nhap` to the product detail modal next to inventory/category quick links.
+- Suggested purchase quantity uses available stock (`quantity - reservedQuantity`) against `minStock`, with a minimum of 1.
+- Kept product create/update/archive behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and `https://cargo.io.vn/admin/products`, `/admin/inventory?search=test`, and `/admin/purchases?productId=test&quantity=1&note=from-products` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Inventory Transaction Drilldown
+
+- Extended inventory transaction payload with `productId`.
+- Added `Xem` action to the recent inventory transaction table.
+- Added transaction detail modal showing product, SKU, transaction type, recorded quantity, before/after stock, stock delta, timestamp, and note.
+- Added quick links from the transaction detail modal back to the matching product and inventory search.
+- Kept inventory import/export/adjust backend behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and `https://cargo.io.vn/admin/inventory` plus `https://cargo.io.vn/admin/products?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Order Item Cross Links
+
+- Extended `/admin/orders` item payload with `productId`.
+- Added product and inventory links under each item in the order detail modal.
+- Links use SKU when present and fall back to product name.
+- Kept order create/status workflows unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/orders`, `/admin/products?search=test`, and `/admin/inventory?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Product Table Bulk Bar
+
+- Added checkbox selection to `/admin/products` rows and the current page header.
+- Added a product bulk bar above the table that summarizes selected rows, or the current filtered result when nothing is selected.
+- Added quick actions from the bulk bar:
+  - Open inventory for the first selected/filtered SKU.
+  - Create a purchase order for the first selected/filtered SKU.
+  - Export selected/filtered products to CSV with stock and pricing columns.
+- Kept product create/update/archive backend behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/products`, `/admin/inventory?search=test`, and `/admin/purchases?productId=test&quantity=1&note=from-products-bulk` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Inventory Table Bulk Bar
+
+- Added checkbox selection to `/admin/inventory` rows and the current page header.
+- Added an inventory bulk bar above the table that summarizes selected rows, or the current filtered result when nothing is selected.
+- Added quick actions from the bulk bar:
+  - Open product search for the first selected/filtered SKU.
+  - Create a purchase order for the first selected/filtered SKU with suggested quantity.
+  - Open quick import modal for the first selected/filtered SKU.
+  - Export selected/filtered inventory rows to CSV with stock, reserved, available, pricing, and value columns.
+- Kept inventory import/export/adjust backend behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/inventory`, `/admin/products?search=test`, and `/admin/purchases?productId=test&quantity=1&note=from-inventory-bulk` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Order Payment Shipment Links
+
+- Extended `/admin/orders` payload with paid amount and shipment summaries.
+- Order detail modal now shows paid, remaining receivable, shipment count, latest shipment carrier/status, and tracking code.
+- Added quick links from order detail to:
+  - `/admin/finance/payments?search=ORDER_CODE`
+  - `/admin/shipments?search=ORDER_CODE`
+- Added `search` query support and visible quick-link banners to `/admin/finance/payments` and `/admin/shipments`.
+- Kept order, payment, and shipment mutation behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/orders`, `/admin/finance/payments?search=test`, and `/admin/shipments?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Payment Shipment Back Links
+
+- Added `search` query support and quick-link banner to `/admin/orders`.
+- Added `Mở đơn hàng` quick link under each payment transaction row, pointing to `/admin/orders?search=ORDER_CODE`.
+- Added `Mở đơn hàng` and `Mở thanh toán` quick links under each shipment row.
+- Kept payment/shipment/order mutation behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/orders?search=test`, `/admin/finance/payments?search=test`, and `/admin/shipments?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Payment Shipment Detail Actions
+
+- Added `Xem chi tiết` action to each `/admin/finance/payments` transaction row.
+- Added payment detail modal with amount, method, reference, receiver, recorded time, note, and links back to order and shipment searches.
+- Added order/payment quick links inside the shipment detail modal.
+- Kept payment and shipment mutation behavior unchanged.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, and `npm run smoke:admin-ui`.
+- Verified `shoponline-web` is healthy and domain routes `/admin/finance/payments?search=test`, `/admin/shipments?search=test`, and `/admin/orders?search=test` return HTTP 200 with a real session cookie.
+
+## 2026-05-28 Catalog Workflow Smoke
+
+- Added `scripts/smoke-catalog-workflows.ts`.
+- The smoke logs in with a generated admin session and verifies:
+  - `/admin/products?search=SKU` renders the SKU, CSV action, inventory link, and purchase link.
+  - `/admin/inventory?search=SKU` renders the SKU, CSV action, product link, and purchase link.
+  - `/admin/orders?search=ORDER_CODE` renders the order code when order data exists.
+  - `/admin/finance/payments?search=ORDER_CODE` renders payment rows and order back-links when payment data exists.
+  - `/admin/shipments?search=ORDER_CODE` renders shipment rows plus order/payment back-links when shipment data exists.
+- Added `smoke:catalog-workflows` to `package.json` and included it in `smoke:regression`.
+- No runtime app code changed in this pass, so production container rebuild was not required.
+- Verified `npm run smoke:catalog-workflows`, `npm run lint`, `npm run build`, and `npm run smoke:admin-ui`.
+
+## 2026-05-28 Product Inventory Server CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/products/export`
+  - `/api/admin/inventory/export`
+- Product export supports current table filters through `search`, `categoryId`, `status`, and `stock` query params.
+- Inventory export supports current table filters through `search` and `stock` query params.
+- Added `Tải CSV` links to the product and inventory bulk bars while keeping the existing client-side selected-row `Xuất CSV` action.
+- Extended `smoke:catalog-workflows` to verify the CSV endpoints return `text/csv` and include the expected SKU.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:catalog-workflows`.
+- Verified `shoponline-web` is healthy and domain CSV endpoints `/api/admin/products/export` plus `/api/admin/inventory/export` return HTTP 200 with `text/csv`.
+
+## 2026-05-28 Purchase Supplier Server CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/purchases/export`
+  - `/api/admin/suppliers/export`
+- Purchase export supports `search` and `status`, flattening purchase items into CSV rows.
+- Supplier export supports `search` and `status`, including open debt, debt count, and purchase count.
+- Added `Tai CSV` links to `/admin/purchases` and `/admin/suppliers` list pages.
+- Added `/admin/purchases?search=...` initial quick filter support.
+- Extended `smoke:catalog-workflows` to verify purchase/supplier pages and CSV endpoints.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:catalog-workflows`.
+- Verified `shoponline-web` is healthy and domain routes `/api/admin/purchases/export`, `/api/admin/suppliers/export`, `/admin/purchases?search=test`, and `/admin/suppliers?search=test` return HTTP 200 with a real session cookie; CSV endpoints return `text/csv`.
+
+## 2026-05-28 Finance Server CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/finance/debts/export`
+  - `/api/admin/finance/expenses/export`
+- Debt export supports `search`, `type`, and `status`, including party name/phone, amount, paid amount, remaining amount, due date, and note.
+- Expense export supports `search`, `category`, and `status`, including title, category, amount, created/updated time, and note.
+- Added `Tai CSV` links to `/admin/finance/debts` and `/admin/finance/expenses` list pages.
+- Added `/admin/finance/debts?search=...` and `/admin/finance/expenses?search=...` initial quick filter support.
+- Extended `smoke:catalog-workflows` to verify finance debt/expense pages and CSV endpoints.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:catalog-workflows`.
+- Verified `shoponline-web` is healthy and domain routes `/api/admin/finance/debts/export`, `/api/admin/finance/expenses/export`, `/admin/finance/debts?search=test`, and `/admin/finance/expenses?search=test` return HTTP 200 with a real session cookie; CSV endpoints return `text/csv`.
+
+## 2026-05-29 Payment Shipment Server CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/finance/payments/export`
+  - `/api/admin/shipments/export`
+- Payment export supports `search` and `method`, including order code, customer, order total, payment status, payment amount, method, reference, receiver, timestamp, and note.
+- Shipment export supports `search` and `status`, including order code, customer, order status, carrier, service, tracking code, shipping fee, status, shipping/delivery timestamps, creator, and note.
+- Added `Tai CSV` links to `/admin/finance/payments` and `/admin/shipments` list pages.
+- Extended `smoke:catalog-workflows` to verify payment/shipment pages show CSV actions and both CSV endpoints return matching order data.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:catalog-workflows`.
+- Verified `shoponline-web` is healthy and domain routes `/api/admin/finance/payments/export`, `/api/admin/shipments/export`, `/admin/finance/payments?search=test`, and `/admin/shipments?search=test` return HTTP 200 with a real session cookie; CSV endpoints return `text/csv`.
+
+## 2026-05-29 Orders Customers Server CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/orders/export`
+  - `/api/admin/customers/export`
+- Order export supports `search`, `status`, and `payment`, including order code, customer contact, order/payment status, total, paid, remaining, item summary, latest shipment summary, timestamps, and note.
+- Customer export supports `search`, `source`, `group`, and `status`, including contact, address, source/group, order count, total spent, updated time, and notes.
+- Added `Tai CSV` links to `/admin/orders` and `/admin/customers` list pages.
+- Added `/admin/customers?search=...` initial quick filter support.
+- Extended `smoke:catalog-workflows` to verify order/customer pages show CSV actions and both CSV endpoints return matching data.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:catalog-workflows`.
+- Verified `shoponline-web` is healthy and domain routes `/api/admin/orders/export`, `/api/admin/customers/export`, `/admin/orders?search=test`, and `/admin/customers?search=test` return HTTP 200 with a real session cookie; CSV endpoints return `text/csv`.
+
+## 2026-05-29 Business UAT Smoke
+
+- Added `scripts/smoke-business-uat.ts`.
+- Added `npm run smoke:business-uat`.
+- Included `smoke:business-uat` in `npm run smoke:regression`.
+- The business UAT smoke creates a real end-to-end admin workflow:
+  - Create category and product with inventory through admin APIs.
+  - Create a customer and admin order.
+  - Verify reserved inventory after order creation.
+  - Record partial payment and verify `PARTIAL` payment status.
+  - Record final payment and verify `PAID` payment status.
+  - Create shipment, transition it to `SHIPPED`, and verify shipment status.
+  - Complete the order and verify `COMPLETED` order status.
+  - Verify order/customer/product/inventory/payment/shipment admin pages by query deep links.
+  - Verify order/customer/product/inventory/payment/shipment CSV exports include the created UAT data.
+- Verified standalone `npm run smoke:business-uat`.
+- Verified `npm run lint`, `npm run build`, `npm run smoke:prod`, `npm run smoke:admin-ui`, `npm run smoke:catalog-workflows`, and `npm run smoke:business-uat`.
+- Verified `shoponline-web` is healthy after the UAT smoke run.
+
+## 2026-05-29 UAT Cleanup Coverage
+
+- Extended `scripts/cleanup-smoke-data.ts` to explicitly match Business UAT markers:
+  - Product SKU prefix `UAT-SKU-`
+  - Product slug prefix `uat-product-`
+  - Category slug prefix `uat-cat-`
+  - Customer name prefix `UAT Customer`
+  - Customer email prefix `uat-`
+  - Customer source `UAT`
+  - Order/purchase/payment/inventory notes containing `uat`
+  - Payment reference prefix `UAT-`
+  - Shipment tracking prefix `UATTRK`
+- Kept cleanup guarded as before: default is dry-run, destructive cleanup still requires `CONFIRM_SMOKE_CLEANUP=yes`.
+- Verified `npm run smoke:cleanup` dry-run on VPS after the matcher update.
+- Dry-run matched 74 rows/actions, up from 60 before the explicit UAT matchers, confirming the new UAT product/category/inventory records are covered.
+
+## 2026-05-29 Tracking Reconciliation
+
+- Extended `findTrackingOrder` to return:
+  - Paid amount.
+  - Remaining amount.
+  - Latest shipment carrier/service/tracking/status/shipped/delivered timestamps.
+- Rebuilt `/tracking` so a searched order shows:
+  - Order status and payment status.
+  - Paid amount.
+  - Remaining receivable.
+  - Latest shipment summary.
+  - Shipment details when present.
+  - Item and total breakdown.
+- Updated `smoke:tracking` to create a payment and shipment, then verify tracking-service and tracking page reconciliation fields.
+- Updated `smoke:public-flow` to use an authenticated session cookie because public routes are intentionally locked, and removed the old root-home storefront assumption.
+- Verified `npm run lint`, `npm run build`, Docker web redeploy, `npm run smoke:prod`, `npm run smoke:tracking`, and `npm run smoke:public-flow`.
+- Verified `shoponline-web` is healthy and `https://cargo.io.vn/tracking?code=missing-smoke-check` returns HTTP 200 with a real session cookie.
+
+## 2026-05-29 Operator Handoff And Readiness
+
+- Added `OPERATOR_HANDOFF.md` with:
+  - Access URL and current admin login.
+  - Daily operator checklist.
+  - Before-real-usage smoke checklist.
+  - Dry-run and confirmed smoke/UAT data cleanup instructions.
+  - Deploy, health, backup, and key admin page references.
+  - CSV export coverage summary.
+- Updated `scripts/smoke-readiness.ts` to match current production behavior:
+  - Root `/` should redirect to `/admin/login?next=/admin/dashboard`.
+  - `/admin/login` should render the admin login and should not include the removed public-site loop link.
+  - `/api/health` should return ok.
+  - Basic mojibake guard remains.
+- Updated `DEPLOYMENT.md` to link the operator handoff, document public route locking, readiness smoke, and smoke/UAT data cleanup.
+- Verified `npm run smoke:readiness`, `npm run smoke:prod`, and `npm run smoke:cleanup` dry-run on VPS.
+- Latest dry-run matched 97 smoke/UAT rows/actions after recent UAT/tracking smoke runs; no destructive cleanup was run.
+
+## 2026-05-29 Release Readiness Command
+
+- Added `npm run release:readiness`.
+- The command runs backup restore verification, readiness smoke, production smoke, catalog workflow checks, business UAT, tracking reconciliation, and smoke/UAT cleanup dry-run in one operator-facing command.
+- Updated `OPERATOR_HANDOFF.md` and `DEPLOYMENT.md` to use the consolidated readiness command before real usage.
+- Cleanup remains non-destructive unless `CONFIRM_SMOKE_CLEANUP=yes` is explicitly set.
+- Verified `npm run release:readiness` on VPS. Backup restore verification passed against `/opt/shoponline/backups/postgres/shoponline-20260529-022701.sql.gz`, production/readiness/catalog/business-UAT/tracking smokes passed, and cleanup dry-run matched 120 smoke/UAT rows/actions after the new UAT run.
+
+## 2026-05-29 Admin System Status
+
+- Added `/admin/system` as an operator-facing system status page.
+- The page shows DB health, open orders, unpaid/partial orders, low-stock count, unread alerts, automation errors in the last 24h, business data snapshot, smoke/UAT residue estimate, latest automation runs, latest activity logs, and the release/cleanup commands.
+- Added `/admin/system` to the admin sidebar under System.
+- Extended `scripts/smoke-admin-ui.ts` to cover `/admin/system`; admin UI smoke now checks 22 routes.
+- Updated `OPERATOR_HANDOFF.md` and `DEPLOYMENT.md` to reference the new page.
+- Verified `npm run lint`, `npm run build`, Docker web rebuild, `npm run smoke:prod`, `npm run smoke:admin-ui`, and `npm run smoke:readiness` on VPS. `shoponline-web` is healthy on `127.0.0.1:3002`.
+
+## 2026-05-29 Audit Notification CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/audit/export`
+  - `/api/admin/notifications/export`
+- Added `Tai CSV` actions to `/admin/audit` and `/admin/notifications`, preserving current client filters in the export URL.
+- Extended `scripts/smoke-catalog-workflows.ts` to verify both pages show CSV actions and both CSV endpoints return `text/csv`.
+- Updated `OPERATOR_HANDOFF.md` CSV coverage to include audit logs and notifications.
+- Verified `npm run lint`, `npm run build`, Docker web rebuild, `npm run smoke:prod`, `npm run smoke:admin-ui`, `npm run smoke:catalog-workflows`, and `npm run smoke:readiness` on VPS. `shoponline-web` is healthy.
+
+## 2026-05-29 Returns Promotions Automation CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/returns/export`
+  - `/api/admin/promotions/export`
+  - `/api/admin/automation/export`
+- Added `Tai CSV` actions to `/admin/returns`, `/admin/promotions`, and `/admin/automation`.
+- Extended `scripts/smoke-catalog-workflows.ts` to verify these pages show CSV actions and the new CSV endpoints return `text/csv`.
+- Updated `OPERATOR_HANDOFF.md` CSV coverage to include returns, promotions, and automation runs.
+- Verified `npm run lint`, `npm run build`, Docker web rebuild, `npm run smoke:prod`, `npm run smoke:admin-ui`, `npm run smoke:catalog-workflows`, and `npm run smoke:readiness` on VPS. `shoponline-web` is healthy.
+
+## 2026-05-29 Categories Users Customer Timeline CSV Export
+
+- Added authenticated server CSV export endpoints:
+  - `/api/admin/categories/export`
+  - `/api/admin/users/export`
+  - `/api/admin/customers/timeline/export`
+- Added CSV actions to `/admin/categories`, `/admin/users`, and `/admin/customers/timeline`, preserving current client filters in the export URL.
+- Extended `scripts/smoke-catalog-workflows.ts` to verify these pages show CSV actions and the new CSV endpoints return `text/csv`.
+- Updated `OPERATOR_HANDOFF.md` CSV coverage to include categories, users, and customer timeline.
+- Verified `npm run lint`, `npm run build`, Docker web rebuild, `npm run smoke:prod`, `npm run smoke:admin-ui`, `npm run smoke:catalog-workflows`, and `npm run smoke:readiness` on VPS. `shoponline-web` is healthy.
+
+## 2026-05-29 Reports Server CSV Export
+
+- Added authenticated server CSV export endpoint `/api/admin/reports/export`.
+- Supports report tabs through `tab=sales`, `tab=products`, `tab=inventory`, and `tab=debts`.
+- Replaced `/admin/reports` browser-only export button with a server CSV link for the active tab.
+- Extended `scripts/smoke-catalog-workflows.ts` to verify `/admin/reports` shows CSV and all report export tabs return `text/csv`.
+- Updated `OPERATOR_HANDOFF.md` CSV coverage to include reports.
+- Verified `npm run lint`, `npm run build`, Docker web rebuild, `npm run smoke:prod`, `npm run smoke:admin-ui`, `npm run smoke:catalog-workflows`, and `npm run smoke:readiness` on VPS. `shoponline-web` is healthy.
+
+## 2026-05-29 Admin Export Smoke
+
+- Added `scripts/smoke-admin-exports.ts`.
+- Added `npm run smoke:admin-exports`.
+- The smoke verifies 22 admin CSV export endpoints return HTTP 200, `text/csv`, and expected row/header content.
+- Added `smoke:admin-exports` to `smoke:regression` and `release:readiness`.
+- Verified `npm run smoke:admin-exports`, `npm run smoke:catalog-workflows`, and `npm run smoke:readiness` on VPS.
+- Verified full `npm run release:readiness` on VPS. Backup restore verification passed against `/opt/shoponline/backups/postgres/shoponline-20260529-022701.sql.gz`, readiness/production/admin-export/catalog/business-UAT/tracking smokes passed, and cleanup dry-run matched 143 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 Admin Export Auth Guard Smoke
+
+- Extended `scripts/smoke-admin-exports.ts` to call every CSV export endpoint without a session cookie and assert HTTP 401 with no `text/csv` response.
+- Added a role guard check that uses a limited active user, when present, and verifies `/api/admin/users/export` returns HTTP 401.
+- Verified `npm run smoke:admin-exports` reports `22 endpoints, anonymous guard, role guard`.
+- Verified full `npm run release:readiness` again on VPS. Backup restore verification passed against `/opt/shoponline/backups/postgres/shoponline-20260529-022701.sql.gz`, readiness/production/admin-export/catalog/business-UAT/tracking smokes passed, and cleanup dry-run matched 166 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 Admin Export Cache Header Hardening
+
+- Added `Cache-Control: no-store` and `X-Content-Type-Options: nosniff` to all 19 admin CSV export route responses.
+- Extended `scripts/smoke-admin-exports.ts` to assert every export response is an attachment and includes `text/csv`, `no-store`, and `nosniff`.
+- Verified `npm run lint` and `npm run build` on VPS.
+- Rebuilt `shoponline-web` and verified `npm run smoke:admin-exports`, `npm run smoke:readiness`, and full `npm run release:readiness` on VPS.
+- Latest release readiness passed backup restore verification, readiness/production/admin-export/catalog/business-UAT/tracking smokes, and cleanup dry-run matched 189 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 Admin Export CSV Helper
+
+- Added shared `apps/web/src/lib/csv-export.ts` for CSV cell escaping, BOM CSV document creation, and authenticated export response headers.
+- Refactored all 19 admin CSV export route handlers to use `csvExportResponse(...)` instead of duplicating CSV response/header logic.
+- Verified on VPS:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web rebuild passed.
+  - `npm run smoke:admin-exports` passed for 22 export checks plus anonymous and role guards.
+  - `npm run smoke:readiness` passed.
+  - Full `npm run release:readiness` passed, including backup restore verification, readiness/production/admin-export/catalog/business-UAT/tracking smokes, and cleanup dry-run.
+- Latest cleanup dry-run matched 212 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 Security Audit Guard
+
+- Added `scripts/check-security-audit.ts`.
+- Added `npm run audit:security`.
+- Updated `check:ci` and `release:readiness` to run `audit:security` instead of only `audit:high`.
+- The guard fails on high/critical vulnerabilities and on any unreviewed moderate vulnerability.
+- The only allowed moderate advisory is the currently known transitive Next.js/PostCSS advisory; registry check showed Next `16.2.6` is still latest and still depends on PostCSS `8.4.31`.
+- Verified on VPS:
+  - `npm run audit:security` passed with 2 known moderate advisory entries allowed.
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Full `npm run release:readiness` passed with the new audit step first.
+- Latest cleanup dry-run matched 235 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 CI Clean Database Migration Guard
+
+- Updated `.github/workflows/ci.yml` to start a clean PostgreSQL 16 service.
+- CI now sets `DATABASE_URL`, `AUTH_SECRET`, and `NEXT_TELEMETRY_DISABLED`.
+- CI now runs `npm run prisma:migrate` before `npm run check:ci`, so all Prisma migrations must apply cleanly from an empty database.
+- Verified the same flow on VPS with a temporary `shoponline-ci-postgres-test` container on `127.0.0.1:15434`:
+  - `npm run prisma:migrate` applied all 13 migrations.
+  - `npm run check:ci` passed.
+  - Temporary test container was removed.
+
+## 2026-05-29 Operator UAT Checklist
+
+- Added an Operator UAT checklist panel to `/admin/system`.
+- Checklist covers catalog/stock, order/payment, shipment/tracking, return/refund, finance handoff, and access/audit validation.
+- Updated `OPERATOR_HANDOFF.md` to tell operators to walk through the checklist after `release:readiness` passes.
+- Extended `scripts/smoke-admin-ui.ts` so `/admin/system` must render `Operator UAT checklist`.
+- Verified on VPS:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web rebuild passed.
+  - `npm run smoke:admin-ui` passed for 22 routes.
+  - `npm run smoke:readiness` passed.
+  - Full `npm run release:readiness` passed.
+- Latest cleanup dry-run matched 258 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-29 Inventory Risk Dashboard
+
+- Enhanced `/admin/inventory` with an always-visible Inventory risk dashboard.
+- Added risk metrics for:
+  - Negative available stock where reserved quantity exceeds actual stock.
+  - Inventory value currently reserved for open orders.
+  - Slow-moving stock with no inventory transaction in 30 days.
+  - SKUs without inventory transaction history.
+- Added quick risk filters:
+  - `NEGATIVE`
+  - `STALE`
+  - `NO_TRANSACTION`
+- Inventory rows now receive `lastTransactionAt` from the latest inventory transaction.
+- Inventory CSV export now includes `lastTransactionAt` and supports the new risk filters.
+- Extended `smoke:catalog-workflows` to verify the Inventory risk dashboard renders on `/admin/inventory`.
+- Verified on VPS:
+  - `npm run lint` passed.
+  - `npm run build` passed.
+  - Docker web rebuild passed.
+  - `npm run smoke:catalog-workflows` passed.
+  - `npm run smoke:admin-ui` passed.
+  - `npm run smoke:admin-exports` passed.
+  - Full `npm run release:readiness` passed.
+- Latest cleanup dry-run matched 281 smoke/UAT rows/actions. No destructive cleanup was run.
+
+## 2026-05-30 - Product Gallery và Public Detail Page
+
+- Thêm API route  (POST) hỗ trợ add/delete/reorder ảnh gallery.
+- Tạo  component cho admin — hiển thị danh sách ảnh, thêm URL, xóa, sắp xếp lên/xuống.
+- Cập nhật  modal trong  thêm tab Ảnh gallery bên cạnh tab Thông tin.
+- Cập nhật  để include  trong query.
+- Tạo  component cho public — hiển thị ảnh chính + thumbnails, prev/next navigation, fallback thumbnail.
+- Cập nhật  để dùng  với danh sách ảnh từ , fallback về thumbnail nếu chưa có gallery.
+- Xác nhận Category hierarchy đã hoàn chỉnh từ trước (parentId trong schema, UI có cột Cha và select cha trong modal).
+- Production Docker web build passed, containers healthy, health OK.
+
+## 2026-05-30 - Product Gallery va Public Detail Page
+
+- Them API route /api/admin/products/images (POST) ho tro add/delete/reorder anh gallery.
+- Tao ProductGalleryPanel component cho admin - hien thi danh sach anh, them URL, xoa, sap xep len/xuong.
+- Cap nhat ProductDetail modal trong /admin/products them tab Anh gallery ben canh tab Thong tin.
+- Cap nhat /admin/products/page.tsx de include images trong query.
+- Tao ProductGallery component cho public - hien thi anh chinh + thumbnails, prev/next navigation, fallback thumbnail.
+- Cap nhat /products/[slug]/page.tsx de dung ProductGallery voi danh sach anh tu ProductImage, fallback ve thumbnail neu chua co gallery.
+- Xac nhan Category hierarchy da hoan chinh tu truoc (parentId trong schema, UI co cot Cha va select cha trong modal).
+- Production Docker web build passed, containers healthy, health OK.

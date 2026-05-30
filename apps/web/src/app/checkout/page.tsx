@@ -17,6 +17,7 @@ export default function CheckoutPage() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+  const count = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
 
   if (result) return <StoreShell compact><section className="grid place-items-center rounded-lg border border-emerald-200 bg-white px-6 py-14 text-center shadow-sm"><div className="grid max-w-md gap-4"><p className="text-sm font-semibold text-emerald-700">Đặt hàng thành công</p><h1 className="text-3xl font-semibold">Mã đơn {result}</h1><p className="text-sm leading-6 text-slate-600">Cửa hàng đã ghi nhận đơn hàng. Bạn có thể dùng mã này để theo dõi trạng thái xử lý.</p><StoreButton href={`/tracking?code=${result}`}>Theo dõi đơn</StoreButton></div></section></StoreShell>;
 
@@ -30,7 +31,7 @@ export default function CheckoutPage() {
           {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p> : null}
           <div className="flex justify-end border-t border-slate-100 pt-4"><StoreButton type="submit" disabled={pending || !items.length}>{pending ? "Đang đặt..." : "Đặt hàng"}</StoreButton></div>
         </form>
-        <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><h2 className="font-semibold">Đơn hàng</h2>{items.length ? <div className="mt-3 grid gap-3">{items.map((item) => <div key={item.id} className="flex justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm"><span>{item.name} x{item.quantity}</span><strong>{money(item.price * item.quantity)}</strong></div>)}</div> : <p className="mt-3 text-sm text-slate-500">Giỏ hàng đang trống.</p>}<div className="mt-4 flex justify-between border-t border-slate-100 pt-4"><span>Tạm tính</span><strong>{money(total)}</strong></div></aside>
+        <aside className="h-fit rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">Đơn hàng</h2><p className="mt-1 text-xs text-slate-500">{count} sản phẩm</p></div>{couponCode ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">{couponCode}</span> : null}</div>{items.length ? <div className="mt-3 grid gap-3">{items.map((item) => <div key={item.id} className="flex justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm"><span>{item.name} x{item.quantity}</span><strong>{money(item.price * item.quantity)}</strong></div>)}</div> : <p className="mt-3 text-sm text-slate-500">Giỏ hàng đang trống.</p>}<div className="mt-4 grid gap-2 border-t border-slate-100 pt-4 text-sm"><div className="flex justify-between"><span>Tạm tính</span><strong>{money(total)}</strong></div><p className="text-xs leading-5 text-slate-500">Phí giao hàng và mã giảm giá sẽ được hệ thống xác nhận khi tạo đơn.</p></div></aside>
       </div>
     </StoreShell>
   );

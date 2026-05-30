@@ -16,9 +16,11 @@
     "prisma:seed": "npm run prisma:seed --workspace apps/web",
     "deploy:preview": "docker compose up -d --build",
     "deploy:prod": "./scripts/deploy-production.sh",
+    "release:readiness": "npm run audit:security && npm run backup:verify && npm run smoke:readiness && npm run smoke:prod && npm run smoke:admin-exports && npm run smoke:catalog-workflows && npm run smoke:business-uat && npm run smoke:tracking && npm run smoke:cleanup",
     "check": "npm run lint && npm run build && npm run backup:verify && npm run smoke:regression",
-    "check:ci": "npm run prisma:generate && npm run lint && npm run build && npm run audit:high",
+    "check:ci": "npm run prisma:generate && npm run lint && npm run build && npm run audit:security",
     "audit:high": "npm audit --audit-level=high",
+    "audit:security": "tsx scripts/check-security-audit.ts",
     "docker:clean": "docker builder prune -af --filter until=48h && docker image prune -f",
     "backup:postgres": "./scripts/backup-postgres.sh",
     "backup:verify": "./scripts/verify-postgres-backup.sh",
@@ -36,10 +38,13 @@
     "smoke:tracking": "tsx scripts/smoke-tracking.ts",
     "smoke:uat-pages": "tsx scripts/smoke-uat-pages.ts",
     "smoke:cleanup": "tsx scripts/cleanup-smoke-data.ts",
-    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking && npm run smoke:uat-pages && npm run smoke:admin-ui && npm run smoke:public-ui && npm run smoke:public-flow && npm run smoke:readiness",
+    "smoke:regression": "npm run smoke:prod && npm run smoke:admin && npm run smoke:checkout && npm run smoke:reporting && npm run smoke:tracking && npm run smoke:uat-pages && npm run smoke:admin-ui && npm run smoke:admin-exports && npm run smoke:catalog-workflows && npm run smoke:business-uat && npm run smoke:public-ui && npm run smoke:public-flow && npm run smoke:readiness",
     "smoke:admin-ui": "tsx scripts/smoke-admin-ui.ts",
     "smoke:public-ui": "tsx scripts/smoke-public-ui.ts",
     "smoke:public-flow": "tsx scripts/smoke-public-flow.ts",
-    "smoke:readiness": "tsx scripts/smoke-readiness.ts"
+    "smoke:readiness": "tsx scripts/smoke-readiness.ts",
+    "smoke:catalog-workflows": "tsx scripts/smoke-catalog-workflows.ts",
+    "smoke:admin-exports": "tsx scripts/smoke-admin-exports.ts",
+    "smoke:business-uat": "tsx scripts/smoke-business-uat.ts"
   }
 }

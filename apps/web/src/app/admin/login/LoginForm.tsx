@@ -1,23 +1,33 @@
-﻿"use client";
-
-import { useActionState } from "react";
-import { loginAction } from "./actions";
-
-export function LoginForm() {
-  const [state, formAction, pending] = useActionState(loginAction, { error: "" });
+export function LoginForm({ nextPath = "/admin/dashboard", error }: { nextPath?: string; error?: string }) {
+  const errorMessage = error ? "Tên đăng nhập hoặc mật khẩu không đúng." : "";
 
   return (
-    <form action={formAction} className="grid gap-4">
+    <form action="/admin/login/submit" method="post" className="grid gap-4">
+      <input type="hidden" name="next" value={nextPath} />
       <label className="grid gap-2 text-sm font-semibold text-slate-700">
-        Email
-        <input className="rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-emerald-600" name="email" type="email" defaultValue="admin@shoponline.local" required />
+        Tên đăng nhập
+        <input
+          className="rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-emerald-600"
+          name="identifier"
+          type="text"
+          autoComplete="username"
+          defaultValue="admin"
+          required
+        />
       </label>
       <label className="grid gap-2 text-sm font-semibold text-slate-700">
         Mật khẩu
-        <input className="rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-emerald-600" name="password" type="password" defaultValue="ShopOnline@2026" required />
+        <input
+          className="rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-emerald-600"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          defaultValue="123456"
+          required
+        />
       </label>
-      {state.error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{state.error}</p> : null}
-      <button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white disabled:opacity-60" disabled={pending}>{pending ? "Đang đăng nhập..." : "Đăng nhập"}</button>
+      {errorMessage ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{errorMessage}</p> : null}
+      <button type="submit" className="rounded-lg bg-slate-950 px-4 py-2 font-semibold text-white">Đăng nhập</button>
     </form>
   );
 }

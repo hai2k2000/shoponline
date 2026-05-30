@@ -5,13 +5,13 @@ const prisma = new PrismaClient();
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@shoponline.local";
-  const adminPassword = process.env.ADMIN_PASSWORD || "ShopOnline@2026";
+  const adminPassword = process.env.ADMIN_PASSWORD || "123456";
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { name: "Administrator", role: UserRole.ADMIN, passwordHash },
-    create: { name: "Administrator", email: adminEmail, role: UserRole.ADMIN, passwordHash },
+    update: { name: "admin", role: UserRole.ADMIN, passwordHash },
+    create: { name: "admin", email: adminEmail, role: UserRole.ADMIN, passwordHash },
   });
 
   const category = await prisma.category.upsert({

@@ -13,7 +13,7 @@ export type CreatePurchaseInput = {
 
 export function purchaseCode() {
   const now = new Date();
-  return `PO${now.toISOString().slice(0, 10).replaceAll("-", "")}${now.getTime().toString().slice(-6)}`;
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase(); return `PO${now.toISOString().slice(0, 10).replaceAll("-", "")}${rand}`;
 }
 
 export async function createPurchaseOrder(tx: Prisma.TransactionClient, input: CreatePurchaseInput, userId: string) {

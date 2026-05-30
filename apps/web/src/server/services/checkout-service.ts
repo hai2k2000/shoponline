@@ -24,7 +24,8 @@ export type PublicCheckoutInput = {
 
 function orderCode() {
   const now = new Date();
-  return `SO${now.toISOString().slice(0, 10).replaceAll("-", "")}${now.getTime().toString().slice(-6)}`;
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `SO${now.toISOString().slice(0, 10).replaceAll("-", "")}${rand}`;
 }
 
 function calcDiscount(promotion: { discountType: string; discountValue: unknown; minOrder: unknown; maxDiscount: unknown }, subtotal: number) {
@@ -39,25 +40,44 @@ export async function createPublicCheckoutOrder(tx: Prisma.TransactionClient, in
   if (!validItems.length) throw new CheckoutError("Giỏ hàng trống.");
   if (!input.customerName || !input.phone) throw new CheckoutError("Thiếu tên hoặc số điện thoại.");
 
-  const customer = await tx.customer.create({
-    data: {
-      name: input.customerName,
-      phone: input.phone,
-      email: input.email,
-      address: input.address,
-      source: "Website",
-      notes: input.note,
-    },
-  });
+  // Upsert customer theo phone để tránh duplicate
+  const phone = input.phone.trim();
+  const existing = await tx.customer.findFirst({ where: { phone } });
+  const customer = existing
+    ? await tx.customer.update({
+        where: { id: existing.id },
+        data: {
+          name: input.customerName,
+          email: input.email ?? existing.email,
+          address: input.address ?? existing.address,
+        },
+      })
+    : await tx.customer.create({
+        data: {
+          name: input.customerName,
+          phone,
+          email: input.email,
+          address: input.address,
+          source: "Website",
+          notes: input.note,
+        },
+      });
 
   let subtotal = 0;
   const orderItems = [];
   for (const item of validItems) {
-    const product = await tx.product.findUnique({ where: { id: item.id }, include: { inventory: true } });
+    const product = await tx.product.findUnique({ where: { id: item.id } });
     if (!product || product.status !== "ACTIVE") throw new CheckoutError("Sản phẩm không hợp lệ.");
-    const inventory = product.inventory || await tx.inventory.create({ data: { productId: product.id, quantity: 0, reservedQuantity: 0 } });
-    const available = inventory.quantity - inventory.reservedQuantity;
-    if (item.quantity > available) throw new CheckoutError(`Sản phẩm ${product.name} không đủ tồn.`);
+
+    // Atomic reserve: chỉ tăng reservedQuantity nếu available >= quantity
+    const reserved = await tx.$executeRaw`
+      UPDATE "Inventory"
+      SET "reservedQuantity" = "reservedQuantity" + ${item.quantity}
+      WHERE "productId" = ${item.id}
+        AND (quantity - "reservedQuantity") >= ${item.quantity}
+    `;
+    if (reserved === 0) throw new CheckoutError(`Sản phẩm ${product.name} không đủ tồn.`);
+
     const price = Number(product.promotionPrice || product.salePrice);
     subtotal += price * item.quantity;
     orderItems.push({
@@ -69,7 +89,6 @@ export async function createPublicCheckoutOrder(tx: Prisma.TransactionClient, in
       salePrice: price,
       total: price * item.quantity,
     });
-    await tx.inventory.update({ where: { productId: product.id }, data: { reservedQuantity: inventory.reservedQuantity + item.quantity } });
   }
 
   const setting = await tx.storeSetting.findUnique({ where: { id: "default" } });

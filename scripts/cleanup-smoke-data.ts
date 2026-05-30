@@ -10,6 +10,10 @@ function containsSmoke(field: string) {
   return { [field]: { contains: "smoke", ...insensitive } };
 }
 
+function containsUat(field: string) {
+  return { [field]: { contains: "uat", ...insensitive } };
+}
+
 function startsWith(field: string, value: string) {
   return { [field]: { startsWith: value, ...insensitive } };
 }
@@ -30,27 +34,36 @@ async function collectTargets() {
       startsWith("sku", "CHK-"),
       startsWith("sku", "RPT-"),
       startsWith("sku", "TRK-"),
+      startsWith("sku", "UAT-SKU-"),
       containsSmoke("name"),
       containsSmoke("slug"),
+      startsWith("slug", "uat-product-"),
+      containsUat("description"),
     ],
   };
 
   const categoryWhere = {
     OR: [
       startsWith("slug", "smoke-cat-"),
+      startsWith("slug", "uat-cat-"),
       { slug: { in: ["backend-smoke", "checkout-smoke", "reporting-smoke", "tracking-smoke"] } },
       containsSmoke("name"),
+      containsUat("name"),
     ],
   };
 
   const customerWhere = {
     OR: [
       startsWith("name", "Smoke "),
+      startsWith("name", "UAT Customer "),
       startsWith("name", "Checkout Customer "),
       startsWith("name", "Reporting Customer "),
       startsWith("name", "Tracking Customer "),
       containsSmoke("notes"),
       containsSmoke("source"),
+      containsUat("notes"),
+      startsWith("email", "uat-"),
+      startsWith("source", "UAT"),
     ],
   };
 
@@ -100,6 +113,7 @@ async function collectTargets() {
       startsWith("orderCode", "RPT"),
       startsWith("orderCode", "TRK"),
       containsSmoke("note"),
+      containsUat("note"),
       { customerId: inIds(customerIds) },
       { items: { some: { productId: inIds(productIds) } } },
     ],
@@ -108,6 +122,7 @@ async function collectTargets() {
   const purchaseWhere = {
     OR: [
       containsSmoke("note"),
+      containsUat("note"),
       { supplierId: inIds(supplierIds) },
       { items: { some: { productId: inIds(productIds) } } },
     ],
@@ -173,17 +188,17 @@ async function countTargets(targets: Awaited<ReturnType<typeof collectTargets>>)
       OR: [{ id: inIds(targets.returnIds) }, { orderId: inIds(targets.orderIds) }, containsSmoke("reason"), containsSmoke("note")],
     },
     shipments: {
-      OR: [{ orderId: inIds(targets.orderIds) }, startsWith("trackingCode", "TRK"), containsSmoke("note")],
+      OR: [{ orderId: inIds(targets.orderIds) }, startsWith("trackingCode", "TRK"), startsWith("trackingCode", "UATTRK"), containsSmoke("note"), containsUat("note")],
     },
     paymentTransactions: {
-      OR: [{ orderId: inIds(targets.orderIds) }, startsWith("reference", "SMOKE"), containsSmoke("note")],
+      OR: [{ orderId: inIds(targets.orderIds) }, startsWith("reference", "SMOKE"), startsWith("reference", "UAT-"), containsSmoke("note"), containsUat("note")],
     },
     orderItems: { orderId: inIds(targets.orderIds) },
     orders: { id: inIds(targets.orderIds) },
     purchaseOrderItems: { purchaseOrderId: inIds(targets.purchaseIds) },
     purchaseOrders: { id: inIds(targets.purchaseIds) },
     inventoryTransactions: {
-      OR: [{ productId: inIds(targets.productIds) }, containsSmoke("note")],
+      OR: [{ productId: inIds(targets.productIds) }, containsSmoke("note"), containsUat("note")],
     },
     inventories: { productId: inIds(targets.productIds) },
     productImages: { productId: inIds(targets.productIds) },

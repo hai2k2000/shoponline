@@ -3,10 +3,10 @@ import "dotenv/config";
 const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3002";
 
 const publicRoutes: Array<{ path: string; title: string; required: string[] }> = [
-  { path: "/", title: "Cửa hàng trực tuyến", required: ["Xem sản phẩm", "Sản phẩm mới", "Tra cứu đơn"] },
+  { path: "/", title: "Cửa hàng trực tuyến", required: ["Xem sản phẩm", "Sản phẩm mới", "Tra cứu đơn", "Xem chi tiết"] },
   { path: "/products", title: "Danh sách sản phẩm", required: ["Tìm kiếm sản phẩm", "Thêm vào giỏ"] },
-  { path: "/cart", title: "Giỏ hàng", required: ["Tiếp tục mua", "Thanh toán"] },
-  { path: "/checkout", title: "Thanh toán", required: ["Họ tên", "Số điện thoại", "Đặt hàng"] },
+  { path: "/cart", title: "Giỏ hàng", required: ["Tiếp tục mua", "Thanh toán", "Tạm tính"] },
+  { path: "/checkout", title: "Thanh toán", required: ["Họ tên", "Số điện thoại", "Đặt hàng", "Tạm tính"] },
   { path: "/tracking", title: "Tra cứu đơn hàng", required: ["Mã đơn", "Tiếp tục mua hàng"] },
 ];
 

@@ -11,8 +11,8 @@ type SortKey = "createdAt" | "title" | "category" | "amount" | "status";
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 const pageSize = 12;
 
-export function ExpensesClient({ rows, sessionToken }: { rows: ExpenseRow[]; sessionToken: string }) {
-  const [query, setQuery] = useState("");
+export function ExpensesClient({ rows, sessionToken, initialQuery = "" }: { rows: ExpenseRow[]; sessionToken: string; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -54,6 +54,17 @@ export function ExpensesClient({ rows, sessionToken }: { rows: ExpenseRow[]; ses
         <SelectField label="Trạng thái" value={status} onChange={(value) => { setStatus(value); resetPage(); }}><option value="">Tất cả</option>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}</SelectField>
       </FilterBar>
 
+      {initialQuery ? (
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Dang mo chi phi theo tu khoa <span className="font-mono">{initialQuery}</span>.
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+        <span>{filtered.length} dong chi phi dang loc</span>
+        <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" href={expenseExportHref(query, category, status)}>Tai CSV</a>
+      </div>
+
       <DataPanel>
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="bg-slate-100 text-slate-600"><tr><SortableTh label="Chi phí" active={sortKey === "title"} direction={sortDirection} onClick={() => toggleSort("title", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Danh mục" active={sortKey === "category"} direction={sortDirection} onClick={() => toggleSort("category", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Số tiền" active={sortKey === "amount"} direction={sortDirection} onClick={() => toggleSort("amount", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Ngày" active={sortKey === "createdAt"} direction={sortDirection} onClick={() => toggleSort("createdAt", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Trạng thái" active={sortKey === "status"} direction={sortDirection} onClick={() => toggleSort("status", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><th className="px-4 py-3 text-right font-semibold">Thao tác</th></tr></thead>
@@ -84,3 +95,4 @@ function statusTone(status: string): Tone { return ({ ACTIVE: "emerald", DRAFT: 
 function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }
 function dateText(value: string) { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short" }).format(new Date(value)); }
 function viStatus(status: string) { return ({ ACTIVE: "Đang tính", DRAFT: "Nháp", HIDDEN: "Ẩn", ARCHIVED: "Lưu trữ" } as Record<string, string>)[status] || status; }
+function expenseExportHref(query: string, category: string, status: string) { const params = new URLSearchParams(); if (query.trim()) params.set("search", query.trim()); if (category) params.set("category", category); if (status) params.set("status", status); const suffix = params.toString(); return `/api/admin/finance/expenses/export${suffix ? `?${suffix}` : ""}`; }

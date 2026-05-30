@@ -25,8 +25,8 @@ type SortKey = "updatedAt" | "name" | "totalOrders" | "totalSpent" | "status";
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 const pageSize = 12;
 
-export function CustomersClient({ rows, sessionToken }: { rows: CustomerRow[]; sessionToken: string }) {
-  const [query, setQuery] = useState("");
+export function CustomersClient({ rows, sessionToken, initialQuery = "" }: { rows: CustomerRow[]; sessionToken: string; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState("");
   const [source, setSource] = useState("");
   const [group, setGroup] = useState("");
@@ -81,6 +81,17 @@ export function CustomersClient({ rows, sessionToken }: { rows: CustomerRow[]; s
         <SelectField label="Nhóm" value={group} onChange={(value) => { setGroup(value); resetPage(); }}><option value="">Tất cả</option>{groups.map((item) => <option key={item} value={item}>{item}</option>)}</SelectField>
         <SelectField label="Trạng thái" value={status} onChange={(value) => { setStatus(value); resetPage(); }}><option value="">Tất cả</option>{statuses.map((item) => <option key={item} value={item}>{viStatus(item)}</option>)}</SelectField>
       </FilterBar>
+
+      {initialQuery ? (
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Dang mo khach hang theo tu khoa <span className="font-mono">{initialQuery}</span>.
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+        <span>{filtered.length} khach hang dang loc</span>
+        <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" href={customerExportHref(query, source, group, status)}>Tai CSV</a>
+      </div>
 
       <DataPanel>
         <table className="w-full min-w-[1080px] text-left text-sm">
@@ -163,5 +174,6 @@ function toggleSort(nextKey: SortKey, sortKey: SortKey, sortDirection: "asc" | "
 function compareCustomers(left: CustomerRow, right: CustomerRow, key: SortKey, direction: "asc" | "desc") { const modifier = direction === "asc" ? 1 : -1; if (key === "updatedAt") return (new Date(left.updatedAt).getTime() - new Date(right.updatedAt).getTime()) * modifier; if (key === "totalOrders" || key === "totalSpent") return (left[key] - right[key]) * modifier; return String(left[key]).localeCompare(String(right[key]), "vi") * modifier; }
 function statusTone(status: string): Tone { return ({ ACTIVE: "emerald", DRAFT: "amber", HIDDEN: "slate", ARCHIVED: "red" } as Record<string, Tone>)[status] || "slate"; }
 function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }
+function customerExportHref(query: string, source: string, group: string, status: string) { const params = new URLSearchParams(); if (query.trim()) params.set("search", query.trim()); if (source) params.set("source", source); if (group) params.set("group", group); if (status) params.set("status", status); const suffix = params.toString(); return `/api/admin/customers/export${suffix ? `?${suffix}` : ""}`; }
 function dateText(value: string) { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
 function viStatus(status: string) { return ({ ACTIVE: "Đang hoạt động", DRAFT: "Nháp", HIDDEN: "Ẩn", ARCHIVED: "Lưu trữ" } as Record<string, string>)[status] || status; }

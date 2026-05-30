@@ -5,15 +5,18 @@ import { OrdersClient } from "./OrdersClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrdersPage() {
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ search?: string }> }) {
   const cookieStore = await cookies();
+  const params = await searchParams;
   const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [orders, customers, products] = await Promise.all([
     prisma.order.findMany({
       orderBy: [{ updatedAt: "desc" }],
       include: {
         customer: { select: { name: true } },
-        items: { select: { productName: true, sku: true, quantity: true, salePrice: true, total: true } },
+        items: { select: { productId: true, productName: true, sku: true, quantity: true, salePrice: true, total: true } },
+        payments: { select: { amount: true } },
+        shipments: { select: { status: true, trackingCode: true, carrier: true, shippedAt: true, deliveredAt: true, createdAt: true }, orderBy: { createdAt: "desc" } },
       },
     }),
     prisma.customer.findMany({
@@ -31,16 +34,27 @@ export default async function OrdersPage() {
   return (
     <OrdersClient
       sessionToken={sessionToken}
+      initialQuery={params.search || ""}
       rows={orders.map((row) => ({
         id: row.id,
         orderCode: row.orderCode,
         customerName: row.customer?.name || "Khách lẻ",
         total: Number(row.total),
+        paid: row.payments.reduce((sum, payment) => sum + Number(payment.amount), 0),
         paymentStatus: row.paymentStatus,
         orderStatus: row.orderStatus,
         note: row.note,
         createdAt: row.createdAt.toISOString(),
+        shipments: row.shipments.map((shipment) => ({
+          status: shipment.status,
+          trackingCode: shipment.trackingCode,
+          carrier: shipment.carrier,
+          shippedAt: shipment.shippedAt?.toISOString() || null,
+          deliveredAt: shipment.deliveredAt?.toISOString() || null,
+          createdAt: shipment.createdAt.toISOString(),
+        })),
         items: row.items.map((item) => ({
+          productId: item.productId,
           productName: item.productName,
           sku: item.sku,
           quantity: item.quantity,

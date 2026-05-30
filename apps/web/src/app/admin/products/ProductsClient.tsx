@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Download, PackagePlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { AdminPage, Button, DataPanel, EmptyState, Field, FilterBar, inputClass, PageHeader, Pagination, SearchField, SelectField, StatCard, StatusBadge, textareaClass, type Tone } from "@/components/admin/ui";
+import { ProductGalleryPanel } from "./ProductGalleryPanel";
 
 type ProductRow = {
   id: string;
@@ -22,24 +23,26 @@ type ProductRow = {
   categoryName: string | null;
   quantity: number;
   reservedQuantity: number;
+  images: { id: string; imageUrl: string; sortOrder: number }[];
 };
 
 type CategoryOption = { id: string; name: string };
-type ModalState = { mode: "create" } | { mode: "edit"; row: ProductRow } | null;
+type ModalState = { mode: "create" } | { mode: "edit"; row: ProductRow } | { mode: "detail"; row: ProductRow } | null;
 type SortKey = "updatedAt" | "name" | "sku" | "salePrice" | "quantity" | "status";
 
 const statuses = ["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"];
 const pageSize = 12;
 
-export function ProductsClient({ rows, categories, sessionToken }: { rows: ProductRow[]; categories: CategoryOption[]; sessionToken: string }) {
-  const [query, setQuery] = useState("");
+export function ProductsClient({ rows, categories, sessionToken, initialQuery = "", initialCategoryId = "" }: { rows: ProductRow[]; categories: CategoryOption[]; sessionToken: string; initialQuery?: string; initialCategoryId?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [stockFilter, setStockFilter] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState<ModalState>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -58,6 +61,9 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const selectedRows = filtered.filter((row) => selectedIds.has(row.id));
+  const selectedVisibleCount = visibleRows.filter((row) => selectedIds.has(row.id)).length;
+  const allVisibleSelected = Boolean(visibleRows.length) && selectedVisibleCount === visibleRows.length;
   const activeCount = rows.filter((row) => row.status === "ACTIVE").length;
   const lowStockCount = rows.filter((row) => row.quantity <= row.minStock).length;
   const inventoryValue = rows.reduce((sum, row) => sum + row.costPrice * row.quantity, 0);
@@ -65,6 +71,28 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
 
   function resetPage() {
     setPage(1);
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleVisibleRows() {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (allVisibleSelected) visibleRows.forEach((row) => next.delete(row.id));
+      else visibleRows.forEach((row) => next.add(row.id));
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
   }
 
   return (
@@ -75,6 +103,12 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
         description="Quản lý catalog, SKU, giá bán, trạng thái hiển thị và tồn kho ban đầu cho luồng bán hàng."
         action={<Button onClick={() => setModal({ mode: "create" })}><Plus className="mr-2 size-4" />Tạo sản phẩm</Button>}
       />
+
+      {initialQuery || initialCategoryId ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          Đang mở từ liên kết nhanh. Bộ lọc đã được áp dụng theo {initialQuery ? `từ khóa "${initialQuery}"` : "danh mục đã chọn"}.
+        </div>
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Tổng sản phẩm" value={rows.length} hint={`${activeCount} đang bán`} />
@@ -90,10 +124,21 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
         <SelectField label="Tồn kho" value={stockFilter} onChange={(value) => { setStockFilter(value); resetPage(); }}><option value="">Tất cả</option><option value="available">Còn bán được</option><option value="low">Tồn thấp</option><option value="out">Hết khả dụng</option></SelectField>
       </FilterBar>
 
+      <ProductBulkBar categoryId={categoryId} filteredRows={filtered} query={query} selectedRows={selectedRows} status={status} stockFilter={stockFilter} onClear={clearSelection} />
+
       <DataPanel>
-        <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600">
+        <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
+          <thead className="bg-blue-50 text-blue-900">
             <tr>
+              <th className="w-12 px-4 py-3">
+                <input
+                  aria-label="Chọn tất cả sản phẩm trên trang"
+                  checked={allVisibleSelected}
+                  className="size-4 rounded border-slate-300"
+                  onChange={toggleVisibleRows}
+                  type="checkbox"
+                />
+              </th>
               <SortableTh label="Sản phẩm" active={sortKey === "name"} direction={sortDirection} onClick={() => toggleSort("name", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
               <SortableTh label="SKU" active={sortKey === "sku"} direction={sortDirection} onClick={() => toggleSort("sku", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
               <th className="px-4 py-3 font-semibold">Danh mục</th>
@@ -101,6 +146,7 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
               <SortableTh label="Giá bán" active={sortKey === "salePrice"} direction={sortDirection} onClick={() => toggleSort("salePrice", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
               <SortableTh label="Tồn" active={sortKey === "quantity"} direction={sortDirection} onClick={() => toggleSort("quantity", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
               <SortableTh label="Trạng thái" active={sortKey === "status"} direction={sortDirection} onClick={() => toggleSort("status", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
+              <SortableTh label="Cập nhật" active={sortKey === "updatedAt"} direction={sortDirection} onClick={() => toggleSort("updatedAt", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} />
               <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
             </tr>
           </thead>
@@ -108,15 +154,25 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
             {visibleRows.map((row) => {
               const available = row.quantity - row.reservedQuantity;
               return (
-                <tr key={row.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70">
+                <tr key={row.id} className="border-t border-blue-50 align-top hover:bg-blue-50/50">
+                  <td className="px-4 py-3">
+                    <input
+                      aria-label={`Chọn sản phẩm ${row.name}`}
+                      checked={selectedIds.has(row.id)}
+                      className="size-4 rounded border-slate-300"
+                      onChange={() => toggleRow(row.id)}
+                      type="checkbox"
+                    />
+                  </td>
                   <td className="px-4 py-3"><strong>{row.name}</strong><p className="mt-1 max-w-72 truncate text-xs text-slate-500">{row.shortDescription || row.slug}</p></td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{row.sku}</td>
                   <td className="px-4 py-3">{row.categoryName || "-"}</td>
                   <td className="px-4 py-3">{money(row.costPrice)}</td>
-                  <td className="px-4 py-3"><strong>{money(row.salePrice)}</strong>{row.promotionPrice ? <p className="text-xs font-semibold text-emerald-700">KM {money(row.promotionPrice)}</p> : null}</td>
+                  <td className="px-4 py-3"><strong>{money(row.salePrice)}</strong>{row.promotionPrice ? <p className="text-xs font-semibold text-blue-600">KM {money(row.promotionPrice)}</p> : null}</td>
                   <td className="px-4 py-3"><StatusBadge tone={stockTone(row)}>{available} khả dụng</StatusBadge><p className="mt-1 text-xs text-slate-500">Tổng {row.quantity} · Giữ {row.reservedQuantity} · Min {row.minStock}</p></td>
                   <td className="px-4 py-3"><StatusBadge tone={statusTone(row.status)}>{viStatus(row.status)}</StatusBadge></td>
-                  <td className="px-4 py-3"><div className="flex justify-end gap-2"><button className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold hover:bg-slate-50" onClick={() => setModal({ mode: "edit", row })}><Pencil className="size-4" />Sửa</button>{row.status !== "ARCHIVED" ? <ArchiveButton row={row} sessionToken={sessionToken} /> : null}</div></td>
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600">{dateText(row.updatedAt)}</td>
+                  <td className="px-4 py-3"><div className="flex flex-wrap justify-end gap-2"><a className="inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-white px-3 py-2 font-semibold text-blue-700 hover:bg-blue-50" href={inventoryHref(row)}>Tồn kho</a><a className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 font-semibold text-blue-700 hover:bg-blue-50" href={purchaseHref(row)}><PackagePlus className="size-4" />Nhập</a><button className="inline-flex min-h-9 items-center rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold hover:bg-slate-50" onClick={() => setModal({ mode: "detail", row })}>Xem</button><button className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold hover:bg-slate-50" onClick={() => setModal({ mode: "edit", row })}><Pencil className="size-4" />Sửa</button>{row.status !== "ARCHIVED" ? <ArchiveButton row={row} sessionToken={sessionToken} /> : null}</div></td>
                 </tr>
               );
             })}
@@ -126,13 +182,115 @@ export function ProductsClient({ rows, categories, sessionToken }: { rows: Produ
         <Pagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />
       </DataPanel>
 
-      {modal ? <ProductModal modal={modal} categories={categories} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
+      {modal?.mode === "detail" ? <ProductDetail row={modal.row} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
+      {modal?.mode === "create" || modal?.mode === "edit" ? <ProductModal modal={modal} categories={categories} sessionToken={sessionToken} onClose={() => setModal(null)} /> : null}
     </AdminPage>
   );
 }
 
-function ProductModal({ modal, categories, sessionToken, onClose }: { modal: ModalState; categories: CategoryOption[]; sessionToken: string; onClose: () => void }) {
-  const row = modal?.mode === "edit" ? modal.row : null;
+function ProductBulkBar({ categoryId, filteredRows, query, selectedRows, status, stockFilter, onClear }: { categoryId: string; filteredRows: ProductRow[]; query: string; selectedRows: ProductRow[]; status: string; stockFilter: string; onClear: () => void }) {
+  const activeRows = selectedRows.length ? selectedRows : filteredRows;
+  const firstRow = activeRows[0];
+  const totalAvailable = activeRows.reduce((sum, row) => sum + row.quantity - row.reservedQuantity, 0);
+  const totalValue = activeRows.reduce((sum, row) => sum + row.quantity * row.costPrice, 0);
+  const lowStock = activeRows.filter((row) => row.quantity - row.reservedQuantity <= row.minStock).length;
+  const label = selectedRows.length ? `${selectedRows.length} sản phẩm đã chọn` : `${filteredRows.length} sản phẩm đang lọc`;
+  const exportHref = productExportHref(query, categoryId, status, stockFilter);
+
+  if (!filteredRows.length) return null;
+
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-white px-4 py-3 shadow-sm">
+      <div className="grid gap-1">
+        <strong className="text-sm">{label}</strong>
+        <p className="text-xs font-semibold text-slate-500">
+          Khả dụng {totalAvailable} · Tồn thấp {lowStock} · Giá trị {money(totalValue)}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {firstRow ? (
+          <>
+            <a className="inline-flex min-h-9 items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href={inventoryHref(firstRow)}>Mở tồn kho mã đầu</a>
+            <a className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50" href={purchaseHref(firstRow)}><PackagePlus className="size-4" />Nhập mã đầu</a>
+          </>
+        ) : null}
+        <button
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
+          onClick={() => exportProductsCsv(activeRows)}
+          type="button"
+        >
+          <Download className="size-4" />
+          Xuất CSV
+        </button>
+        <a className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href={exportHref}>
+          <Download className="size-4" />
+          Tải CSV
+        </a>
+        {selectedRows.length ? <button className="inline-flex min-h-9 items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" onClick={onClear} type="button">Bỏ chọn</button> : null}
+      </div>
+    </section>
+  );
+}
+
+function ProductDetail({ row, sessionToken, onClose }: { row: ProductRow; sessionToken: string; onClose: () => void }) {
+  const [tab, setTab] = React.useState<"info" | "gallery">("info");
+  const available = row.quantity - row.reservedQuantity;
+  const productInventoryHref = inventoryHref(row);
+  const productPurchaseHref = purchaseHref(row);
+  const categoryHref = row.categoryId ? `/admin/categories?search=${encodeURIComponent(row.categoryName || "")}` : "/admin/categories";
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
+      <section className="grid max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4"><h2 className="text-lg font-semibold">{row.name}</h2><Button variant="outline" onClick={onClose}>Đóng</Button></div>
+        <div className="flex gap-2 border-b border-slate-100 px-5 pt-2">
+          <button onClick={() => setTab("info")} className={"px-4 py-2 text-sm font-semibold border-b-2 " + (tab === "info" ? "border-slate-800 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-700")}>Thông tin</button>
+          <button onClick={() => setTab("gallery")} className={"px-4 py-2 text-sm font-semibold border-b-2 " + (tab === "gallery" ? "border-slate-800 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-700")}>
+            Ảnh gallery {row.images.length > 0 ? <span className="ml-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs">{row.images.length}</span> : null}
+          </button>
+        </div>
+        <div className="grid gap-4 overflow-y-auto p-5">
+          {tab === "info" ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={productInventoryHref}>Mở tồn kho</a>
+                <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50" href={productPurchaseHref}>Tạo đơn nhập</a>
+                <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={categoryHref}>Mở danh mục</a>
+              </div>
+              <section className="grid gap-3 md:grid-cols-3">
+                <Info label="SKU" value={row.sku} />
+                <Info label="Slug" value={row.slug} />
+                <Info label="Danh mục" value={row.categoryName || "-"} />
+                <Info label="Giá vốn" value={money(row.costPrice)} />
+                <Info label="Giá bán" value={money(row.salePrice)} />
+                <Info label="Giá khuyến mãi" value={row.promotionPrice ? money(row.promotionPrice) : "-"} />
+                <Info label="Tồn tổng" value={row.quantity} />
+                <Info label="Đang giữ" value={row.reservedQuantity} />
+                <Info label="Khả dụng" value={available} />
+                <Info label="Tồn tối thiểu" value={row.minStock} />
+                <Info label="Trạng thái" value={viStatus(row.status)} />
+                <Info label="Cập nhật" value={dateTimeText(row.updatedAt)} />
+              </section>
+              <section className="grid gap-3">
+                <Info label="Mô tả ngắn" value={row.shortDescription || "-"} wide />
+                <Info label="Thumbnail URL" value={row.thumbnail || "-"} wide />
+                <Info label="Mô tả chi tiết" value={row.description || "-"} wide />
+              </section>
+            </>
+          ) : (
+            <ProductGalleryPanel productId={row.id} images={row.images} sessionToken={sessionToken} />
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Info({ label, value, wide }: { label: string; value: string | number; wide?: boolean }) {
+  return <div className={`rounded-lg bg-slate-50 p-3 ${wide ? "md:col-span-3" : ""}`}><span className="text-xs font-semibold text-slate-500">{label}</span><strong className="mt-1 block break-words text-sm text-slate-900">{value}</strong></div>;
+}
+
+function ProductModal({ modal, categories, sessionToken, onClose }: { modal: Extract<ModalState, { mode: "create" } | { mode: "edit"; row: ProductRow }>; categories: CategoryOption[]; sessionToken: string; onClose: () => void }) {
+  const row = modal.mode === "edit" ? modal.row : null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
       <form action="/api/admin/products" method="post" className="grid max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
@@ -197,11 +355,65 @@ function stockTone(row: ProductRow): Tone {
   const available = row.quantity - row.reservedQuantity;
   if (available <= 0) return "red";
   if (row.quantity <= row.minStock) return "amber";
-  return "emerald";
+  return "blue";
 }
 
 function statusTone(status: string): Tone {
-  return ({ ACTIVE: "emerald", DRAFT: "amber", HIDDEN: "slate", ARCHIVED: "red" } as Record<string, Tone>)[status] || "slate";
+  return ({ ACTIVE: "blue", DRAFT: "amber", HIDDEN: "slate", ARCHIVED: "red" } as Record<string, Tone>)[status] || "slate";
+}
+
+function inventoryHref(row: ProductRow) {
+  return `/admin/inventory?search=${encodeURIComponent(row.sku)}`;
+}
+
+function purchaseHref(row: ProductRow) {
+  const available = row.quantity - row.reservedQuantity;
+  const suggestedQuantity = Math.max(row.minStock + 1 - available, 1);
+  const params = new URLSearchParams({ productId: row.id, quantity: String(suggestedQuantity), note: "Tạo từ bảng sản phẩm" });
+  return `/admin/purchases?${params.toString()}`;
+}
+
+function productExportHref(query: string, categoryId: string, status: string, stockFilter: string) {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("search", query.trim());
+  if (categoryId) params.set("categoryId", categoryId);
+  if (status) params.set("status", status);
+  if (stockFilter) params.set("stock", stockFilter);
+  const suffix = params.toString();
+  return `/api/admin/products/export${suffix ? `?${suffix}` : ""}`;
+}
+
+function exportProductsCsv(rows: ProductRow[]) {
+  const header = ["name", "sku", "category", "status", "costPrice", "salePrice", "promotionPrice", "quantity", "reservedQuantity", "available", "minStock", "updatedAt"];
+  const body = rows.map((row) => [
+    row.name,
+    row.sku,
+    row.categoryName || "",
+    viStatus(row.status),
+    row.costPrice,
+    row.salePrice,
+    row.promotionPrice ?? "",
+    row.quantity,
+    row.reservedQuantity,
+    row.quantity - row.reservedQuantity,
+    row.minStock,
+    dateTimeText(row.updatedAt),
+  ]);
+  const csv = [header, ...body].map((line) => line.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `shoponline-products-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value: string | number) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
 function viStatus(status: string) {
@@ -210,4 +422,12 @@ function viStatus(status: string) {
 
 function money(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value || 0);
+}
+
+function dateText(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short" }).format(new Date(value));
+}
+
+function dateTimeText(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }

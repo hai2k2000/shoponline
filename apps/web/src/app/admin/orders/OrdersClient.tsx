@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Eye, Plus } from "lucide-react";
 import { AdminPage, Button, DataPanel, EmptyState, Field, FilterBar, inputClass, ModalShell, PageHeader, Pagination, SearchField, SelectField, StatCard, StatusBadge, textareaClass, type Tone } from "@/components/admin/ui";
 
-type OrderItemRow = { productName: string; sku: string | null; quantity: number; salePrice: number; total: number };
-type OrderRow = { id: string; orderCode: string; customerName: string; total: number; paymentStatus: string; orderStatus: string; note: string | null; createdAt: string; items: OrderItemRow[] };
+type OrderItemRow = { productId: string | null; productName: string; sku: string | null; quantity: number; salePrice: number; total: number };
+type ShipmentSummaryRow = { status: string; trackingCode: string | null; carrier: string; shippedAt: string | null; deliveredAt: string | null; createdAt: string };
+type OrderRow = { id: string; orderCode: string; customerName: string; total: number; paid: number; paymentStatus: string; orderStatus: string; note: string | null; createdAt: string; shipments: ShipmentSummaryRow[]; items: OrderItemRow[] };
 type CustomerOption = { id: string; name: string; phone: string | null };
 type ProductOption = { id: string; name: string; sku: string; salePrice: number; available: number };
 type ModalState = { mode: "create" } | { mode: "detail"; row: OrderRow } | null;
@@ -14,8 +15,8 @@ type SortKey = "createdAt" | "total" | "customerName" | "orderStatus";
 const orderStatuses = ["NEW", "CONFIRMED", "PACKING", "SHIPPING", "COMPLETED", "CANCELLED", "RETURNED"];
 const pageSize = 12;
 
-export function OrdersClient({ rows, customers, products, sessionToken }: { rows: OrderRow[]; customers: CustomerOption[]; products: ProductOption[]; sessionToken: string }) {
-  const [query, setQuery] = useState("");
+export function OrdersClient({ rows, customers, products, sessionToken, initialQuery = "" }: { rows: OrderRow[]; customers: CustomerOption[]; products: ProductOption[]; sessionToken: string; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [status, setStatus] = useState("");
   const [payment, setPayment] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -59,6 +60,17 @@ export function OrdersClient({ rows, customers, products, sessionToken }: { rows
         <SelectField label="Trạng thái đơn" value={status} onChange={(value) => { setStatus(value); setPage(1); }}><option value="">Tất cả</option>{orderStatuses.map((item) => <option key={item} value={item}>{viOrderStatus(item)}</option>)}</SelectField>
         <SelectField label="Thanh toán" value={payment} onChange={(value) => { setPayment(value); setPage(1); }}><option value="">Tất cả</option><option value="UNPAID">Chưa thanh toán</option><option value="PARTIAL">Một phần</option><option value="PAID">Đã thanh toán</option><option value="REFUNDED">Đã hoàn tiền</option></SelectField>
       </FilterBar>
+
+      {initialQuery ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          Đang mở đơn hàng theo mã <span className="font-mono">{initialQuery}</span>.
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+        <span>{filtered.length} don hang dang loc</span>
+        <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" href={orderExportHref(query, status, payment)}>Tai CSV</a>
+      </div>
 
       <DataPanel>
         <table className="w-full min-w-[1120px] text-left text-sm">
@@ -144,22 +156,47 @@ function StatusButtons({ row, sessionToken }: { row: OrderRow; sessionToken: str
 }
 
 function OrderDetail({ row, onClose }: { row: OrderRow; onClose: () => void }) {
+  const remaining = Math.max(0, row.total - row.paid);
+  const paymentHref = `/admin/finance/payments?search=${encodeURIComponent(row.orderCode)}`;
+  const shipmentHref = `/admin/shipments?search=${encodeURIComponent(row.orderCode)}`;
+  const latestShipment = row.shipments[0];
+
   return (
     <ModalShell title={row.orderCode} onClose={onClose} width="max-w-3xl">
       <div className="grid gap-4">
-        <div className="grid gap-3 md:grid-cols-2"><Info label="Khách hàng" value={row.customerName} /><Info label="Trạng thái" value={viOrderStatus(row.orderStatus)} /><Info label="Thanh toán" value={viPayment(row.paymentStatus)} /><Info label="Tổng tiền" value={money(row.total)} /><Info label="Ghi chú" value={row.note || "-"} wide /></div>
-        <div className="overflow-hidden rounded-lg border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-100 text-slate-600"><tr><th className="px-3 py-2">Sản phẩm</th><th className="px-3 py-2">SL</th><th className="px-3 py-2">Đơn giá</th><th className="px-3 py-2">Thành tiền</th></tr></thead><tbody>{row.items.map((item) => <tr key={`${item.productName}-${item.sku}`} className="border-t border-slate-100"><td className="px-3 py-2">{item.productName}<p className="text-xs text-slate-500">{item.sku || ""}</p></td><td className="px-3 py-2">{item.quantity}</td><td className="px-3 py-2">{money(item.salePrice)}</td><td className="px-3 py-2">{money(item.total)}</td></tr>)}</tbody></table></div>
+        <div className="flex flex-wrap gap-2">
+          <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={paymentHref}>Mở thanh toán</a>
+          <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={shipmentHref}>Mở vận đơn</a>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <Info label="Khách hàng" value={row.customerName} />
+          <Info label="Trạng thái" value={viOrderStatus(row.orderStatus)} />
+          <Info label="Thanh toán" value={viPayment(row.paymentStatus)} />
+          <Info label="Tổng tiền" value={money(row.total)} />
+          <Info label="Đã thu" value={money(row.paid)} />
+          <Info label="Còn phải thu" value={money(remaining)} />
+          <Info label="Vận đơn" value={row.shipments.length ? `${row.shipments.length} phiếu` : "Chưa có"} />
+          <Info label="Vận đơn mới nhất" value={latestShipment ? `${latestShipment.carrier} - ${viShipmentStatus(latestShipment.status)}` : "-"} />
+          <Info label="Mã tracking" value={latestShipment?.trackingCode || "-"} />
+          <Info label="Ghi chú" value={row.note || "-"} wide />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-slate-200"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-slate-100 text-slate-600"><tr><th className="px-3 py-2">Sản phẩm</th><th className="px-3 py-2">SL</th><th className="px-3 py-2">Đơn giá</th><th className="px-3 py-2">Thành tiền</th></tr></thead><tbody>{row.items.map((item) => {
+          const lookup = item.sku || item.productName;
+          return <tr key={`${item.productName}-${item.sku}`} className="border-t border-slate-100"><td className="px-3 py-2">{item.productName}<p className="text-xs text-slate-500">{item.sku || ""}</p><div className="mt-2 flex flex-wrap gap-2"><a className="text-xs font-semibold text-emerald-700 hover:underline" href={`/admin/products?search=${encodeURIComponent(lookup)}`}>Mở sản phẩm</a><a className="text-xs font-semibold text-emerald-700 hover:underline" href={`/admin/inventory?search=${encodeURIComponent(lookup)}`}>Mở tồn kho</a></div></td><td className="px-3 py-2">{item.quantity}</td><td className="px-3 py-2">{money(item.salePrice)}</td><td className="px-3 py-2">{money(item.total)}</td></tr>;
+        })}</tbody></table></div>
       </div>
     </ModalShell>
   );
 }
 
-function Info({ label, value, wide }: { label: string; value: string | number; wide?: boolean }) { return <div className={`rounded-lg bg-slate-50 p-3 ${wide ? "md:col-span-2" : ""}`}><span className="text-xs font-semibold text-slate-500">{label}</span><strong className="mt-1 block text-sm">{value}</strong></div>; }
+function Info({ label, value, wide }: { label: string; value: string | number; wide?: boolean }) { return <div className={`rounded-lg bg-slate-50 p-3 ${wide ? "md:col-span-3" : ""}`}><span className="text-xs font-semibold text-slate-500">{label}</span><strong className="mt-1 block text-sm">{value}</strong></div>; }
 function toggleSort(nextKey: SortKey, sortKey: SortKey, sortDirection: "asc" | "desc", setSortKey: (key: SortKey) => void, setSortDirection: (direction: "asc" | "desc") => void) { if (nextKey === sortKey) setSortDirection(sortDirection === "asc" ? "desc" : "asc"); else { setSortKey(nextKey); setSortDirection(nextKey === "createdAt" ? "desc" : "asc"); } }
 function compareOrders(left: OrderRow, right: OrderRow, key: SortKey, direction: "asc" | "desc") { const modifier = direction === "asc" ? 1 : -1; if (key === "createdAt") return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * modifier; if (key === "total") return (left.total - right.total) * modifier; return String(left[key]).localeCompare(String(right[key]), "vi") * modifier; }
 function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }
+function orderExportHref(query: string, status: string, payment: string) { const params = new URLSearchParams(); if (query.trim()) params.set("search", query.trim()); if (status) params.set("status", status); if (payment) params.set("payment", payment); const suffix = params.toString(); return `/api/admin/orders/export${suffix ? `?${suffix}` : ""}`; }
 function dateText(value: string) { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
 function paymentTone(status: string): Tone { return ({ UNPAID: "amber", PARTIAL: "blue", PAID: "emerald", REFUNDED: "slate" } as Record<string, Tone>)[status] || "slate"; }
 function orderTone(status: string): Tone { return ({ NEW: "blue", CONFIRMED: "amber", PACKING: "amber", SHIPPING: "blue", COMPLETED: "emerald", CANCELLED: "red", RETURNED: "slate" } as Record<string, Tone>)[status] || "slate"; }
 function viPayment(status: string) { return ({ UNPAID: "Chưa thanh toán", PARTIAL: "Thanh toán một phần", PAID: "Đã thanh toán", REFUNDED: "Đã hoàn tiền" } as Record<string, string>)[status] || status; }
 function viOrderStatus(status: string) { return ({ NEW: "Mới", CONFIRMED: "Đã xác nhận", PACKING: "Đang đóng gói", SHIPPING: "Đang giao", COMPLETED: "Hoàn tất", CANCELLED: "Đã huỷ", RETURNED: "Đã trả hàng" } as Record<string, string>)[status] || status; }
+function viShipmentStatus(status: string) { return ({ PENDING: "Chờ xử lý", PACKED: "Đã đóng gói", SHIPPED: "Đã gửi", DELIVERED: "Đã giao", FAILED: "Giao lỗi", RETURNED: "Hoàn về" } as Record<string, string>)[status] || status; }

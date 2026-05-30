@@ -24,7 +24,7 @@ export default async function AutomationPage() {
 
   return (
     <AdminPage>
-      <PageHeader eyebrow="Admin / Automation" title="Tự động hóa vận hành" description="Theo dõi kết quả các job tự động: tồn thấp, gợi ý nhập hàng, nhắc công nợ, theo dõi đơn hàng và báo cáo ngày." />
+      <PageHeader eyebrow="Admin / Automation" title="Tự động hóa vận hành" description="Theo dõi kết quả các job tự động: tồn thấp, gợi ý nhập hàng, nhắc công nợ, theo dõi đơn hàng và báo cáo ngày." action={<a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold transition hover:bg-slate-50" href="/api/admin/automation/export">Tai CSV</a>} />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Tổng lần chạy" value={runs.length} hint="80 lần gần nhất" />
@@ -38,9 +38,9 @@ export default async function AutomationPage() {
 
       <DataPanel>
         <div className="border-b border-slate-100 px-4 py-3"><h2 className="font-semibold">Lịch sử chạy automation</h2></div>
-        <table className="w-full min-w-[960px] text-left text-sm">
-          <thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Job</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Tóm tắt</th><th className="px-4 py-3">Thời gian</th></tr></thead>
-          <tbody>{runs.map((run) => <tr key={run.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70"><td className="px-4 py-3 font-semibold">{jobLabels[run.jobType] || run.jobType}</td><td className="px-4 py-3"><AutomationStatus status={run.status} /></td><td className="px-4 py-3"><span className="line-clamp-2 max-w-3xl">{run.summary}</span></td><td className="px-4 py-3 whitespace-nowrap">{dateText(run.createdAt)}</td></tr>)}</tbody>
+        <table className="w-full min-w-[1120px] text-left text-sm">
+          <thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-3">Job</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Tóm tắt</th><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3">Chi tiết</th></tr></thead>
+          <tbody>{runs.map((run) => <tr key={run.id} className="border-t border-slate-100 align-top hover:bg-slate-50/70"><td className="px-4 py-3 font-semibold">{jobLabels[run.jobType] || run.jobType}</td><td className="px-4 py-3"><AutomationStatus status={run.status} /></td><td className="px-4 py-3"><span className="line-clamp-2 max-w-3xl">{run.summary}</span></td><td className="px-4 py-3 whitespace-nowrap">{dateText(run.createdAt)}</td><td className="px-4 py-3"><AutomationDetails details={run.details} /></td></tr>)}</tbody>
         </table>
         {!runs.length ? <EmptyState title="Chưa có dữ liệu automation" description="Chạy npm run automation:run để tạo dữ liệu đầu tiên cho các job vận hành tự động." /> : null}
       </DataPanel>
@@ -50,6 +50,9 @@ export default async function AutomationPage() {
 
 function AutomationCard({ run }: { run: { jobType: string; status: string; summary: string; createdAt: Date; details: unknown } }) {
   return <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-center justify-between gap-3"><h2 className="font-semibold">{jobLabels[run.jobType] || run.jobType}</h2><AutomationStatus status={run.status} /></div><p className="mt-3 text-sm leading-6 text-slate-700">{run.summary}</p><p className="mt-2 text-xs text-slate-500">{dateText(run.createdAt)}</p><pre className="mt-3 max-h-48 overflow-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{JSON.stringify(run.details || {}, null, 2)}</pre></article>;
+}
+function AutomationDetails({ details }: { details: unknown }) {
+  return <details className="group max-w-md"><summary className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">Xem JSON</summary><pre className="mt-2 max-h-56 overflow-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{JSON.stringify(details || {}, null, 2)}</pre></details>;
 }
 function AutomationStatus({ status }: { status: string }) { return <StatusBadge tone={statusTone(status)}>{status}</StatusBadge>; }
 function statusTone(status: string): Tone { return status === "OK" ? "emerald" : status === "WARN" ? "amber" : status === "ERROR" ? "red" : "slate"; }

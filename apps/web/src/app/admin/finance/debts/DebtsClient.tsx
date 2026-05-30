@@ -12,8 +12,8 @@ type SortKey = "createdAt" | "partyName" | "type" | "amount" | "remaining" | "du
 const statuses = ["OPEN", "PARTIAL", "PAID", "OVERDUE", "CLOSED"];
 const pageSize = 12;
 
-export function DebtsClient({ rows, customers, suppliers, sessionToken }: { rows: DebtRow[]; customers: PartyOption[]; suppliers: PartyOption[]; sessionToken: string }) {
-  const [query, setQuery] = useState("");
+export function DebtsClient({ rows, customers, suppliers, sessionToken, initialQuery = "" }: { rows: DebtRow[]; customers: PartyOption[]; suppliers: PartyOption[]; sessionToken: string; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -54,6 +54,17 @@ export function DebtsClient({ rows, customers, suppliers, sessionToken }: { rows
         <SelectField label="Trạng thái" value={status} onChange={(value) => { setStatus(value); resetPage(); }}><option value="">Tất cả</option>{statuses.map((item) => <option key={item} value={item}>{viDebtStatus(item)}</option>)}</SelectField>
       </FilterBar>
 
+      {initialQuery ? (
+        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Dang mo cong no theo tu khoa <span className="font-mono">{initialQuery}</span>.
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+        <span>{filtered.length} khoan cong no dang loc</span>
+        <a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" href={debtExportHref(query, type, status)}>Tai CSV</a>
+      </div>
+
       <DataPanel>
         <table className="w-full min-w-[1120px] text-left text-sm">
           <thead className="bg-slate-100 text-slate-600"><tr><SortableTh label="Đối tượng" active={sortKey === "partyName"} direction={sortDirection} onClick={() => toggleSort("partyName", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Loại" active={sortKey === "type"} direction={sortDirection} onClick={() => toggleSort("type", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Số tiền" active={sortKey === "amount"} direction={sortDirection} onClick={() => toggleSort("amount", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><th className="px-4 py-3 font-semibold">Đã trả</th><SortableTh label="Còn lại" active={sortKey === "remaining"} direction={sortDirection} onClick={() => toggleSort("remaining", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Hạn" active={sortKey === "dueDate"} direction={sortDirection} onClick={() => toggleSort("dueDate", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><SortableTh label="Trạng thái" active={sortKey === "status"} direction={sortDirection} onClick={() => toggleSort("status", sortKey, sortDirection, setSortKey, setSortDirection, resetPage)} /><th className="px-4 py-3 text-right font-semibold">Thao tác</th></tr></thead>
@@ -88,3 +99,4 @@ function money(value: number) { return new Intl.NumberFormat("vi-VN").format(val
 function dateText(value: string) { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short" }).format(new Date(value)); }
 function viDebtType(type: string) { return type === "CUSTOMER" ? "Phải thu" : "Phải trả"; }
 function viDebtStatus(status: string) { return ({ OPEN: "Mở", PARTIAL: "Thanh toán một phần", PAID: "Đã thanh toán", OVERDUE: "Quá hạn", CLOSED: "Đã đóng" } as Record<string, string>)[status] || status; }
+function debtExportHref(query: string, type: string, status: string) { const params = new URLSearchParams(); if (query.trim()) params.set("search", query.trim()); if (type) params.set("type", type); if (status) params.set("status", status); const suffix = params.toString(); return `/api/admin/finance/debts/export${suffix ? `?${suffix}` : ""}`; }

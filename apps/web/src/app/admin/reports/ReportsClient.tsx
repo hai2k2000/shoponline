@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Download } from "lucide-react";
-import { AdminPage, Button, DataPanel, EmptyState, PageHeader, StatCard, StatusBadge, type Tone } from "@/components/admin/ui";
+import { AdminPage, DataPanel, EmptyState, PageHeader, StatCard, StatusBadge, type Tone } from "@/components/admin/ui";
 
 type Summary = { revenue: number; expenses: number; profit: number; orders: number; completedOrders: number; receivable: number; payable: number; inventoryValue: number };
 type SalesRow = { orderCode: string; customer: string; status: string; total: number; createdAt: string };
@@ -24,20 +24,13 @@ export function ReportsClient({ summary, salesRows, inventoryRows, debtRows, pro
   const lowStockCount = inventoryRows.filter((row) => row.available <= row.minStock).length;
   const openDebtCount = debtRows.filter((row) => row.remaining > 0 && !["PAID", "CLOSED"].includes(row.status)).length;
 
-  const activeReport = useMemo(() => {
-    if (activeTab === "sales") return { title: "Báo cáo bán hàng", filename: "sales-report.csv", rows: salesRows };
-    if (activeTab === "products") return { title: "Sản phẩm bán chạy", filename: "product-sales-report.csv", rows: productSalesRows };
-    if (activeTab === "inventory") return { title: "Báo cáo tồn kho", filename: "inventory-report.csv", rows: inventoryRows };
-    return { title: "Báo cáo công nợ", filename: "debt-report.csv", rows: debtRows };
-  }, [activeTab, debtRows, inventoryRows, productSalesRows, salesRows]);
-
   return (
     <AdminPage>
       <PageHeader
         eyebrow="Admin / Tài chính / Báo cáo"
         title="Báo cáo vận hành"
         description="Tổng hợp bán hàng, tồn kho, công nợ và lợi nhuận ước tính từ dữ liệu đang chạy."
-        action={<Button variant="outline" onClick={() => downloadCsv(activeReport.filename, activeReport.rows)}><Download className="mr-2 size-4" />Xuất CSV</Button>}
+        action={<a className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold transition hover:bg-slate-50" href={`/api/admin/reports/export?tab=${activeTab}`}><Download className="mr-2 size-4" />CSV</a>}
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -95,16 +88,3 @@ function orderTone(status: string): Tone { return ({ NEW: "blue", CONFIRMED: "am
 function debtTone(status: string): Tone { return ({ OPEN: "amber", PARTIAL: "blue", PAID: "emerald", OVERDUE: "red", CLOSED: "slate" } as Record<string, Tone>)[status] || "slate"; }
 function viOrderStatus(status: string) { return ({ NEW: "Mới", CONFIRMED: "Đã xác nhận", PACKING: "Đang đóng gói", SHIPPING: "Đang giao", COMPLETED: "Hoàn tất", CANCELLED: "Đã huỷ", RETURNED: "Đã trả hàng" } as Record<string, string>)[status] || status; }
 function viDebtStatus(status: string) { return ({ OPEN: "Mở", PARTIAL: "Thanh toán một phần", PAID: "Đã thanh toán", OVERDUE: "Quá hạn", CLOSED: "Đã đóng" } as Record<string, string>)[status] || status; }
-function downloadCsv(filename: string, rows: Record<string, string | number>[]) {
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
-  const escape = (value: string | number) => `"${String(value ?? "").replaceAll('"', '""')}"`;
-  const csv = [headers.map(escape).join(","), ...rows.map((row) => headers.map((key) => escape(row[key])).join(","))].join("\n");
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}

@@ -1,12 +1,22 @@
 import "dotenv/config";
+import { createHmac } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { createPublicCheckoutOrder } from "../apps/web/src/server/services/checkout-service";
 
 const prisma = new PrismaClient();
 const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3002";
+const secret = process.env.AUTH_SECRET || "change-this-before-production";
+const sessionCookie = "shoponline.session";
+let authCookie = "";
+
+function tokenFor(user: { id: string; email: string; role: string }) {
+  const body = Buffer.from(JSON.stringify({ userId: user.id, email: user.email, role: user.role, exp: Date.now() + 60 * 60 * 1000 })).toString("base64url");
+  const signature = createHmac("sha256", secret).update(body).digest("base64url");
+  return `${body}.${signature}`;
+}
 
 async function fetchText(path: string) {
-  const response = await fetch(`${baseUrl}${path}`);
+  const response = await fetch(`${baseUrl}${path}`, { headers: authCookie ? { cookie: authCookie } : undefined });
   const text = await response.text();
   if (response.status !== 200) throw new Error(`${path} failed HTTP ${response.status}: ${text.slice(0, 300)}`);
   return text;
@@ -17,6 +27,10 @@ function assertIncludes(body: string, text: string, label: string) {
 }
 
 async function main() {
+  const admin = await prisma.user.findFirst({ where: { email: "admin@shoponline.local", status: "ACTIVE" } });
+  if (!admin) throw new Error("Missing active admin user.");
+  authCookie = `${sessionCookie}=${tokenFor(admin)}`;
+
   const stamp = Date.now().toString().slice(-8);
   const category = await prisma.category.upsert({
     where: { slug: "public-flow-smoke" },
@@ -44,14 +58,17 @@ async function main() {
     create: { id: "default", storeName: "ShopOnline", shippingFee: 25000 },
   });
 
-  const homeHtml = await fetchText("/");
-  assertIncludes(homeHtml, "Cửa hàng trực tuyến", "Home page");
-  assertIncludes(homeHtml, "Sản phẩm mới", "Home page");
-
   const productsHtml = await fetchText("/products");
   assertIncludes(productsHtml, product.name, "Products page");
   assertIncludes(productsHtml, product.sku, "Products page");
+  assertIncludes(productsHtml, "Xem chi tiết", "Products page");
   assertIncludes(productsHtml, "Thêm vào giỏ", "Products page");
+
+  const productDetailHtml = await fetchText(`/products/${product.slug}`);
+  assertIncludes(productDetailHtml, product.name, "Product detail page");
+  assertIncludes(productDetailHtml, product.sku, "Product detail page");
+  assertIncludes(productDetailHtml, "Tồn khả dụng", "Product detail page");
+  assertIncludes(productDetailHtml, "Thêm vào giỏ", "Product detail page");
 
   const orderResult = await prisma.$transaction((tx) => createPublicCheckoutOrder(tx, {
     items: [{ id: product.id, quantity: 2 }],
@@ -76,6 +93,9 @@ async function main() {
   const trackingHtml = await fetchText(`/tracking?code=${orderResult.orderCode.toLowerCase()}`);
   assertIncludes(trackingHtml, orderResult.orderCode, "Tracking page");
   assertIncludes(trackingHtml, product.name, "Tracking page");
+  assertIncludes(trackingHtml, "Chua thanh toan", "Tracking page");
+  assertIncludes(trackingHtml, "Phi giao hang", "Tracking page");
+  assertIncludes(trackingHtml, "Con phai thu", "Tracking page");
   assertIncludes(trackingHtml, "143.000", "Tracking page");
 
   const checkoutHtml = await fetchText("/checkout");

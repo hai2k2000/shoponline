@@ -5,8 +5,9 @@ import { SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default async function ShipmentsPage() {
+export default async function ShipmentsPage({ searchParams }: { searchParams: Promise<{ search?: string }> }) {
   const cookieStore = await cookies();
+  const params = await searchParams;
   const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [shipments, orders] = await Promise.all([
     prisma.shipment.findMany({
@@ -25,6 +26,7 @@ export default async function ShipmentsPage() {
 
   return (
     <ShipmentsClient
+      initialQuery={params.search || ""}
       rows={shipments.map((row) => ({
         id: row.id,
         orderCode: row.order.orderCode,

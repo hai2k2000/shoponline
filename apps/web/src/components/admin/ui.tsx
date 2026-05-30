@@ -51,11 +51,11 @@ export function FilterBar({ children, resultText }: { children: ReactNode; resul
 }
 
 export function SearchField({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
-  return <label className="grid gap-1 text-sm font-semibold text-slate-700"><span>Tìm kiếm</span><span className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></span></label>;
+  return <label className="grid gap-1 text-sm font-semibold text-slate-700"><span>Tìm kiếm</span><span className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm font-normal outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></span></label>;
 }
 
 export function SelectField({ label, value, onChange, children }: { label: string; value: string; onChange: (value: string) => void; children: ReactNode }) {
-  return <label className="grid gap-1 text-sm font-semibold text-slate-700"><span>{label}</span><select className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200" value={value} onChange={(event) => onChange(event.target.value)}>{children}</select></label>;
+  return <label className="grid gap-1 text-sm font-semibold text-slate-700"><span>{label}</span><select className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" value={value} onChange={(event) => onChange(event.target.value)}>{children}</select></label>;
 }
 
 export function DataPanel({ children }: { children: ReactNode }) {
@@ -83,5 +83,5 @@ export function Field({ label, children, wide }: { label: string; children: Reac
   return <label className={`grid gap-1 text-sm font-semibold text-slate-700 ${wide ? "md:col-span-2" : ""}`}>{label}{children}</label>;
 }
 
-export const inputClass = "h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
+export const inputClass = "h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
 export const textareaClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";

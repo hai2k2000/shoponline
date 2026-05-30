@@ -10,7 +10,7 @@ export type CreateReturnInput = {
 
 export function returnCode() {
   const now = new Date();
-  return `RT${now.toISOString().slice(0, 10).replaceAll("-", "")}${now.getTime().toString().slice(-6)}`;
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase(); return `RT${now.toISOString().slice(0, 10).replaceAll("-", "")}${rand}`;
 }
 
 export async function createReturnRequest(tx: Prisma.TransactionClient, input: CreateReturnInput, userId: string) {

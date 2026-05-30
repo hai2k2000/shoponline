@@ -5,8 +5,9 @@ import { PaymentsClient } from "./PaymentsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function PaymentsPage() {
+export default async function PaymentsPage({ searchParams }: { searchParams: Promise<{ search?: string }> }) {
   const cookieStore = await cookies();
+  const params = await searchParams;
   const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [orders, payments] = await Promise.all([
     prisma.order.findMany({
@@ -23,6 +24,7 @@ export default async function PaymentsPage() {
   return (
     <PaymentsClient
       sessionToken={sessionToken}
+      initialQuery={params.search || ""}
       orders={orders.map((order) => {
         const paid = order.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
         const total = Number(order.total);

@@ -1,18 +1,32 @@
 import "dotenv/config";
+import { createHmac } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { findTrackingOrder } from "../apps/web/src/server/services/tracking-service";
 
 const prisma = new PrismaClient();
 const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3002";
+const secret = process.env.AUTH_SECRET || "change-this-before-production";
+const sessionCookie = "shoponline.session";
+let authCookie = "";
+
+function tokenFor(user: { id: string; email: string; role: string }) {
+  const body = Buffer.from(JSON.stringify({ userId: user.id, email: user.email, role: user.role, exp: Date.now() + 60 * 60 * 1000 })).toString("base64url");
+  const signature = createHmac("sha256", secret).update(body).digest("base64url");
+  return `${body}.${signature}`;
+}
 
 async function fetchText(path: string) {
-  const response = await fetch(`${baseUrl}${path}`);
+  const response = await fetch(`${baseUrl}${path}`, { headers: authCookie ? { cookie: authCookie } : undefined });
   const text = await response.text();
   if (response.status !== 200) throw new Error(`${path} failed HTTP ${response.status}: ${text.slice(0, 300)}`);
   return text;
 }
 
 async function main() {
+  const admin = await prisma.user.findFirst({ where: { email: "admin@shoponline.local", status: "ACTIVE" } });
+  if (!admin) throw new Error("Missing active admin user.");
+  authCookie = `${sessionCookie}=${tokenFor(admin)}`;
+
   const stamp = Date.now().toString().slice(-8);
   const category = await prisma.category.upsert({
     where: { slug: "tracking-smoke" },
@@ -42,7 +56,7 @@ async function main() {
       discount: 5000,
       total: 100000,
       orderStatus: "SHIPPING",
-      paymentStatus: "UNPAID",
+      paymentStatus: "PARTIAL",
       note: `tracking smoke ${stamp}`,
       items: {
         create: {
@@ -57,12 +71,22 @@ async function main() {
       },
     },
   });
+  await prisma.paymentTransaction.create({
+    data: { orderId: order.id, amount: 40000, method: "BANK_TRANSFER", reference: `TRK-PAY-${stamp}`, note: `tracking smoke payment ${stamp}` },
+  });
+  await prisma.shipment.create({
+    data: { orderId: order.id, carrier: "Tracking Carrier", service: "Standard", trackingCode: `TRKSHIP${stamp}`, shippingFee: 15000, status: "SHIPPED", shippedAt: new Date(), note: `tracking smoke shipment ${stamp}` },
+  });
 
   const tracked = await findTrackingOrder(prisma, order.orderCode.toLowerCase());
   if (!tracked) throw new Error("Tracking service did not find order with lowercase code.");
-  if (tracked.orderCode !== order.orderCode || tracked.customerName !== customer.name || tracked.total !== 100000 || tracked.items.length !== 1) {
+  if (tracked.orderCode !== order.orderCode || tracked.customerName !== customer.name || tracked.total !== 100000 || tracked.paid !== 40000 || tracked.remaining !== 60000 || tracked.items.length !== 1) {
     throw new Error("Tracking service returned unexpected order payload.");
   }
+  if (!tracked.latestShipment || tracked.latestShipment.trackingCode !== `TRKSHIP${stamp}` || tracked.latestShipment.status !== "SHIPPED") {
+    throw new Error("Tracking service did not return latest shipment summary.");
+  }
+
   const missing = await findTrackingOrder(prisma, `MISSING${stamp}`);
   if (missing) throw new Error("Tracking service should return null for missing order.");
 
@@ -70,8 +94,12 @@ async function main() {
   if (!foundHtml.includes(order.orderCode) || !foundHtml.includes(product.name) || !foundHtml.includes("100.000")) {
     throw new Error("Tracking page did not render the smoke order.");
   }
+  if (!foundHtml.includes("Da thanh toan") || !foundHtml.includes("Con phai thu") || !foundHtml.includes(`TRKSHIP${stamp}`)) {
+    throw new Error("Tracking page did not render payment/shipment reconciliation.");
+  }
+
   const missingHtml = await fetchText(`/tracking?code=MISSING${stamp}`);
-  if (!missingHtml.includes("Không tìm thấy đơn hàng")) throw new Error("Tracking page did not render missing-order state.");
+  if (!missingHtml.includes("Khong tim thay don hang")) throw new Error("Tracking page did not render missing-order state.");
 
   console.log("ShopOnline tracking smoke passed");
 }

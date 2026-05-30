@@ -5,8 +5,9 @@ import { DebtsClient } from "./DebtsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function DebtsPage() {
+export default async function DebtsPage({ searchParams }: { searchParams: Promise<{ search?: string }> }) {
   const cookieStore = await cookies();
+  const params = await searchParams;
   const sessionToken = cookieStore.get(SESSION_COOKIE)?.value || "";
   const [rows, customers, suppliers] = await Promise.all([
     prisma.debt.findMany({
@@ -23,6 +24,7 @@ export default async function DebtsPage() {
   return (
     <DebtsClient
       sessionToken={sessionToken}
+      initialQuery={params.search || ""}
       rows={rows.map((row) => ({
         id: row.id,
         type: row.type,

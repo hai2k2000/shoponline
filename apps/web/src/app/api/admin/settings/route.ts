@@ -1,22 +1,41 @@
-import type { NextRequest } from "next/server";
-import { z } from "zod";
-import { moneyValue, optionalText, parseAdminForm } from "@/lib/admin-form";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
-import { updateStoreSetting } from "@/server/services/admin-system-service";
+import { getCurrentUser, verifySessionToken } from "@/lib/auth";
 
-const schema = z.object({ storeName: z.preprocess((v) => String(v || "").trim() || "ShopOnline", z.string()), logo: optionalText, phone: optionalText, email: optionalText, address: optionalText, shippingFee: moneyValue, inventoryStrategy: z.preprocess((v) => String(v || "").trim() || "PREVENT_NEGATIVE", z.string()) });
+function text(formData: FormData, key: string) { return String(formData.get(key) || "").trim(); }
+function money(formData: FormData, key: string) { return Math.max(0, Number(formData.get(key) || 0) || 0); }
+function publicUrl(request: NextRequest, path: string) { const proto = request.headers.get("x-forwarded-proto") || "https"; const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || new URL(request.url).host; return new URL(path, `${proto}://${host}`); }
 
 export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData();
-    const { user, response } = await requireAdminFormUser(request, formData, "settings:write", "/admin/settings");
-    if (!user) return response;
-  
-    const input = parseAdminForm(schema, formData);
-    await prisma.$transaction((tx) => updateStoreSetting(tx, input, user.id));
-    return redirectTo(request, "/admin/settings");
-  } catch (error) {
-    return redirectWithAdminError(request, "/admin/settings", error);
-  }
+  const formData = await request.formData();
+  const user = await getUserFromForm(formData);
+  if (!user) return NextResponse.redirect(publicUrl(request, "/admin/login?next=/admin/settings"), { status: 303 });
+  const setting = await prisma.storeSetting.upsert({
+    where: { id: "default" },
+    create: settingData(formData),
+    update: settingData(formData),
+  });
+  await prisma.activityLog.create({ data: { userId: user.id, action: "UPDATE", entityType: "StoreSetting", entityId: setting.id, description: "Cập nhật cấu hình cửa hàng" } });
+  return NextResponse.redirect(publicUrl(request, "/admin/settings"), { status: 303 });
+}
+
+function settingData(formData: FormData) {
+  return {
+    id: "default",
+    storeName: text(formData, "storeName") || "ShopOnline",
+    logo: text(formData, "logo") || null,
+    phone: text(formData, "phone") || null,
+    email: text(formData, "email") || null,
+    address: text(formData, "address") || null,
+    shippingFee: money(formData, "shippingFee"),
+    inventoryStrategy: text(formData, "inventoryStrategy") || "PREVENT_NEGATIVE",
+  };
+}
+
+async function getUserFromForm(formData: FormData) {
+  const cookieUser = await getCurrentUser();
+  if (cookieUser?.status === "ACTIVE") return cookieUser;
+  const session = verifySessionToken(text(formData, "sessionToken"));
+  if (!session) return null;
+  return prisma.user.findFirst({ where: { id: session.userId, status: "ACTIVE" }, select: { id: true, name: true, email: true, role: true, status: true } });
 }
