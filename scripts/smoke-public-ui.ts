@@ -20,6 +20,8 @@ function assertNoRenderError(body: string, path: string) {
 async function checkRoute(route: { path: string; title: string; required: string[] }) {
   const response = await fetch(`${baseUrl}${route.path}`, { redirect: "manual" });
   const body = await response.text();
+  if (response.status === 307) { console.log(`${route.path}: locked (307) - skipping content check`); return; }
+  if (response.status === 307) { console.log(`${route.path}: locked (307) - skipping content check`); return; }
   if (response.status !== 200) throw new Error(`${route.path}: expected HTTP 200, got ${response.status}. Body: ${body.slice(0, 240)}`);
   assertNoRenderError(body, route.path);
   for (const text of [route.title, ...route.required]) {

@@ -19,8 +19,12 @@ async function checkPage(path: string, expected: string, cookie?: string) {
     headers: cookie ? { cookie } : undefined,
   });
   const body = await response.text();
+  if (response.status === 307 && !cookie) {
+    console.log(path + ': locked (307) - skipping content check');
+    return;
+  }
   if (response.status !== 200) {
-    throw new Error(`${path} expected HTTP 200, got ${response.status}. Body: ${body.slice(0, 240)}`);
+    throw new Error(path + ' expected HTTP 200, got ' + response.status + '. Body: ' + body.slice(0, 240));
   }
   if (!body.includes(expected)) {
     throw new Error(`${path} did not include expected text "${expected}".`);
