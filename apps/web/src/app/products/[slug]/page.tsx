@@ -6,6 +6,26 @@ import { ProductGallery } from "./ProductGallery";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const [setting, product] = await Promise.all([
+    prisma.storeSetting.findUnique({ where: { id: "default" } }),
+    prisma.product.findFirst({ where: { slug, status: "ACTIVE" }, select: { name: true, shortDescription: true, metaTitle: true, metaDescription: true, thumbnail: true, tags: true } }),
+  ]);
+  if (!product) return {};
+  const storeName = setting?.storeName || "ShopOnline";
+  const title = product.metaTitle || product.name + " - " + storeName;
+  const description = product.metaDescription || product.shortDescription || "";
+  return {
+    title,
+    description,
+    keywords: product.tags || "",
+    openGraph: { title, description, images: product.thumbnail ? [product.thumbnail] : [] },
+  };
+}
+
+
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [setting, product] = await Promise.all([

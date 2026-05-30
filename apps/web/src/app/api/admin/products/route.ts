@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { redirectTo, redirectWithAdminError, requireAdminFormUser } from "@/lib/admin-api";
 import { upsertProduct } from "@/server/services/catalog-service";
 
-const productSchema = z.object({ mode: z.enum(["create", "update"]), id: optionalText, name: requiredText, slug: optionalText, sku: optionalText, categoryId: optionalText, shortDescription: optionalText, description: optionalText, costPrice: moneyValue, salePrice: moneyValue, promotionPrice: z.preprocess((v) => String(v || "").trim() ? Number(v) : null, z.number().min(0).nullable()), thumbnail: optionalText, status: z.enum(["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"]).default("DRAFT"), minStock: nonNegativeIntValue, stockQuantity: nonNegativeIntValue });
+const productSchema = z.object({ mode: z.enum(["create", "update"]), id: optionalText, name: requiredText, slug: optionalText, sku: optionalText, categoryId: optionalText, shortDescription: optionalText, description: optionalText, costPrice: moneyValue, salePrice: moneyValue, promotionPrice: z.preprocess((v) => String(v || "").trim() ? Number(v) : null, z.number().min(0).nullable()), thumbnail: optionalText, status: z.enum(["ACTIVE", "DRAFT", "HIDDEN", "ARCHIVED"]).default("DRAFT"), minStock: nonNegativeIntValue, stockQuantity: nonNegativeIntValue, metaTitle: optionalText, metaDescription: optionalText, tags: optionalText });
 
 export async function POST(request: NextRequest) {
   try {

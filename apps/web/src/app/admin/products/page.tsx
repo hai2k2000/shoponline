@@ -50,6 +50,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         quantity: row.inventory?.quantity || 0,
         reservedQuantity: row.inventory?.reservedQuantity || 0,
         images: row.images.map((img) => ({ id: img.id, imageUrl: img.imageUrl, sortOrder: img.sortOrder })),
+        metaTitle: row.metaTitle,
+        metaDescription: row.metaDescription,
+        tags: row.tags,
       }))}
     />
   );

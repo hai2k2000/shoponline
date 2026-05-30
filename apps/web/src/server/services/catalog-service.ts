@@ -78,6 +78,9 @@ export type ProductInput = {
   status: RecordStatus;
   minStock: number;
   stockQuantity: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  tags: string | null;
 };
 
 export async function upsertProduct(tx: Prisma.TransactionClient, mode: "create" | "update", input: ProductInput, userId: string, id?: string | null) {
@@ -97,6 +100,9 @@ export async function upsertProduct(tx: Prisma.TransactionClient, mode: "create"
     thumbnail: input.thumbnail,
     status: input.status,
     minStock: input.minStock,
+    metaTitle: input.metaTitle,
+    metaDescription: input.metaDescription,
+    tags: input.tags,
   };
   const product = mode === "create"
     ? await tx.product.create({

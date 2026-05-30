@@ -24,6 +24,9 @@ type ProductRow = {
   quantity: number;
   reservedQuantity: number;
   images: { id: string; imageUrl: string; sortOrder: number }[];
+  metaTitle: string | null;
+  metaDescription: string | null;
+  tags: string | null;
 };
 
 type CategoryOption = { id: string; name: string };
@@ -274,6 +277,9 @@ function ProductDetail({ row, sessionToken, onClose }: { row: ProductRow; sessio
                 <Info label="Mô tả ngắn" value={row.shortDescription || "-"} wide />
                 <Info label="Thumbnail URL" value={row.thumbnail || "-"} wide />
                 <Info label="Mô tả chi tiết" value={row.description || "-"} wide />
+                <Info label="Meta Title" value={row.metaTitle || "-"} wide />
+                <Info label="Meta Description" value={row.metaDescription || "-"} wide />
+                <Info label="Tags" value={row.tags || "-"} wide />
               </section>
             </>
           ) : (
@@ -313,6 +319,9 @@ function ProductModal({ modal, categories, sessionToken, onClose }: { modal: Ext
             <Field label="Mô tả ngắn" wide><input className={inputClass} name="shortDescription" defaultValue={row?.shortDescription || ""} /></Field>
             <Field label="Ảnh thumbnail URL" wide><input className={inputClass} name="thumbnail" defaultValue={row?.thumbnail || ""} /></Field>
             <Field label="Mô tả chi tiết" wide><textarea className={textareaClass} name="description" rows={4} defaultValue={row?.description || ""} /></Field>
+            <Field label="Meta Title (SEO)" wide><input className={inputClass} name="metaTitle" defaultValue={row?.metaTitle || ""} placeholder="Tiêu đề hiển thị trên Google (mặc định dùng tên sản phẩm)" /></Field>
+            <Field label="Meta Description (SEO)" wide><textarea className={textareaClass} name="metaDescription" rows={2} defaultValue={row?.metaDescription || ""} placeholder="Mô tả ngắn hiển thị trên Google (tối đa 160 ký tự)" /></Field>
+            <Field label="Tags (phân cách bằng dấu phẩy)" wide><input className={inputClass} name="tags" defaultValue={row?.tags || ""} placeholder="yoga, sức khỏe, thể thao" /></Field>
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4"><Button variant="outline" onClick={onClose}>Huỷ</Button><Button type="submit">Lưu</Button></div>
