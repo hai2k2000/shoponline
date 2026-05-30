@@ -5,7 +5,7 @@ import { ArrowRight, PackageSearch, ShoppingCart } from "lucide-react";
 
 export function StoreShell({ children, storeName = "ShopOnline", compact = false }: { children: ReactNode; storeName?: string; compact?: boolean }) {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
+    <main className="min-h-screen bg-blue-50/30 text-slate-950">
       <StoreHeader storeName={storeName} />
       <div className={compact ? "mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:px-6 lg:px-8" : "mx-auto grid max-w-7xl gap-8 px-4 py-6 sm:px-6 lg:px-8"}>{children}</div>
     </main>
@@ -14,13 +14,13 @@ export function StoreShell({ children, storeName = "ShopOnline", compact = false
 
 export function StoreHeader({ storeName = "ShopOnline" }: { storeName?: string }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-blue-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link className="min-w-0 text-lg font-semibold tracking-normal text-slate-950" href="/">{storeName}</Link>
         <nav className="flex items-center gap-1 text-sm font-semibold text-slate-700 sm:gap-3">
-          <Link className="rounded-lg px-2 py-2 hover:bg-slate-100 sm:px-3" href="/products">Sản phẩm</Link>
-          <Link className="rounded-lg px-2 py-2 hover:bg-slate-100 sm:px-3" href="/cart">Giỏ hàng</Link>
-          <Link className="rounded-lg px-2 py-2 hover:bg-slate-100 sm:px-3" href="/tracking">Tra cứu</Link>
+          <Link className="rounded-lg px-2 py-2 hover:bg-blue-50 sm:px-3" href="/products">Sản phẩm</Link>
+          <Link className="rounded-lg px-2 py-2 hover:bg-blue-50 sm:px-3" href="/cart">Giỏ hàng</Link>
+          <Link className="rounded-lg px-2 py-2 hover:bg-blue-50 sm:px-3" href="/tracking">Tra cứu</Link>
         </nav>
       </div>
     </header>
@@ -28,11 +28,11 @@ export function StoreHeader({ storeName = "ShopOnline" }: { storeName?: string }
 }
 
 export function PageIntro({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
-  return <section className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-emerald-700">{eyebrow}</p><h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">{title}</h1>{description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}</div>{action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}</section>;
+  return <section className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between"><div className="min-w-0"><p className="text-sm font-semibold text-blue-600">{eyebrow}</p><h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">{title}</h1>{description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}</div>{action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}</section>;
 }
 
 export function StoreButton({ children, href, type = "button", disabled, variant = "solid", onClick }: { children: ReactNode; href?: string; type?: "button" | "submit"; disabled?: boolean; variant?: "solid" | "outline"; onClick?: () => void }) {
-  const className = `inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-55 ${variant === "solid" ? "bg-slate-950 text-white hover:bg-slate-800" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50"}`;
+  const className = `inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-55 ${variant === "solid" ? "bg-blue-600 text-white hover:bg-blue-700" : "border border-blue-200 bg-white text-blue-700 hover:bg-blue-50"}`;
   if (href && !disabled) return <Link className={className} href={href}>{children}</Link>;
   if (href && disabled) return <span aria-disabled="true" className={className}>{children}</span>;
   return <button className={className} type={type} disabled={disabled} onClick={onClick}>{children}</button>;
@@ -59,9 +59,9 @@ export function StatusPill({ children }: { children: ReactNode }) {
 }
 
 export function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
-  return <Link className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800" href={href}>{children}<ArrowRight className="size-4" /></Link>;
+  return <Link className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700" href={href}>{children}<ArrowRight className="size-4" /></Link>;
 }
 
-export const inputClass = "h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
+export const inputClass = "h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
 export const textareaClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200";
 export function money(value: number) { return new Intl.NumberFormat("vi-VN").format(value || 0); }
